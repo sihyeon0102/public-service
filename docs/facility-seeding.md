@@ -137,3 +137,91 @@ TRUNCATE는 AUTO_INCREMENT도 초기화한다. 이후 원하는 생성량의 see
 - `SHOW INDEX FROM facility` 결과 PRIMARY(id) 하나만 존재.
 - 생성 전 테스트의 롤백으로 AUTO_INCREMENT가 이미 증가해 최초 생성 PK는 232였다.
   생성 이름은 요청대로 Facility-1부터 시작한다. PK 초기화가 필요하면 TRUNCATE 후 재생성한다.
+
+## 1,000,000건 데이터셋 구성 및 검증 (2026-09-08)
+
+기존 baseline `e22880627c3352361310482381b1fcbc11744770`의 코드와 빌드 JAR를 사용했다.
+Java 21.0.12.1 / Spring Boot 4.1.1 / Docker MySQL 8.4.11 환경이다.
+
+### 실행 및 소요시간
+
+1. `SELECT DATABASE()`가 `public_service`이고 facility가 100,000건임을 확인했다.
+2. 사용자 승인 범위에 따라 `TRUNCATE TABLE public_service.facility`만 실행했다.
+3. 초기화 후 COUNT가 0임을 확인한 다음 기존 seed를 실행했다.
+
+```powershell
+java -jar build/libs/public-service-0.0.1-SNAPSHOT.jar --spring.profiles.active=seed --seed.facility.count=1000000
+```
+
+- seed 프로필의 `ddl-auto=validate`를 사용했다. 스키마·인덱스·기능 코드는 변경하지 않았다.
+- Batch size 1,000, 100,000건마다 진행 로그를 출력하고 최종 commit에 성공했다.
+- 생성기 로그: `Facility seed committed: 1000000 rows, elapsed=17056 ms`.
+- **17.056초는 데이터 생성·삽입·commit을 포함한 생성기 검증용 로컬 1회 측정이다.**
+  Spring Boot 기동 시간은 제외하며 서비스 조회 성능이나 최적화 전후 개선 수치가 아니다.
+- 원본 실행 로그는 Git 제외 경로 `build/facility-seed-1000000.log`에 있다.
+
+### DB 직접 검증
+
+`COUNT(*)`와 `COUNT(DISTINCT name)`이 모두 1,000,000이며 PK 범위는 1~1,000,000이다.
+
+| region | 실제 COUNT | district 고유 개수 |
+|---|---:|---:|
+| SEOUL | 300,000 | 10 |
+| GYEONGGI | 300,000 | 10 |
+| BUSAN | 150,000 | 10 |
+| INCHEON | 80,000 | 10 |
+| DAEGU | 80,000 | 10 |
+| DAEJEON | 50,000 | 10 |
+| GWANGJU | 40,000 | 10 |
+
+| FacilityType | 실제 COUNT |
+|---|---:|
+| SPORTS_CENTER | 166,690 |
+| LIBRARY | 166,690 |
+| CULTURAL_CENTER | 166,660 |
+| COMMUNITY_CENTER | 166,660 |
+| PARK | 166,650 |
+| OTHER | 166,650 |
+
+| OperatingStatus | 실제 COUNT |
+|---|---:|
+| OPERATING | 333,520 |
+| TEMPORARILY_CLOSED | 333,340 |
+| CLOSED | 333,140 |
+
+유형·상태 건수는 지역별 순번과 Enum 순서로 독립 계산한 기대값과 모두 일치했다.
+각 district에 유형 6개, 각 district/type에 상태 3개가 존재한다.
+생성 컬럼의 NULL 및 위도/경도 범위 오류는 0건이다.
+
+`SHOW INDEX FROM facility` 결과는 아래 한 행뿐이다.
+
+| Key_name | Column_name | Non_unique | Index_type |
+|---|---|---:|---|
+| PRIMARY | id | 0 | BTREE |
+
+### API sanity check
+
+기존 JAR를 seed 없는 `verification` 프로필, `ddl-auto=validate`, localhost:8080으로
+임시 실행했다. 요청은 모두 `GET /api/facilities`, `page=0&size=20`이다.
+동일 검색 조건의 MySQL 직접 COUNT 쿼리와 비교했다.
+
+| 검색 조건 | HTTP | content 개수 | API totalElements | DB COUNT | totalPages |
+|---|---:|---:|---:|---:|---:|
+| 없음 | 200 | 20 | 1,000,000 | 1,000,000 | 50,000 |
+| SEOUL | 200 | 20 | 300,000 | 300,000 | 15,000 |
+| GWANGJU | 200 | 20 | 40,000 | 40,000 | 2,000 |
+| SEOUL + LIBRARY | 200 | 20 | 50,000 | 50,000 | 2,500 |
+| SEOUL + SEOUL-DISTRICT-1 | 200 | 20 | 30,000 | 30,000 | 1,500 |
+| SEOUL + SEOUL-DISTRICT-1 + LIBRARY | 200 | 20 | 5,000 | 5,000 | 250 |
+
+6개 응답의 모든 content가 검색 조건에 일치하고 id 오름차순이며 page=0, size=20이다.
+검증 후 임시 API 프로세스는 종료했다. 이번 작업에서는 기능 코드 변경과 테스트 재실행 없이
+실제 seed 명령·DB 조회·HTTP 요청으로 검증했다.
+
+### 다음 측정의 기준 상태
+
+Facility 1,000,000건, PRIMARY(id)만 있는 상태로 성능 baseline 측정을 시작할 수 있다.
+인덱스·쿼리 튜닝·Redis·캐시는 적용하지 않았다. 이번 sanity check는 기능 검증이며
+부하 상황의 처리량이나 지연시간을 측정한 결과는 아니다.
+검증 조회가 DB 버퍼를 데웠을 수 있으므로 향후 Before/After 측정에서는 워밍업 조건,
+데이터 분포, 요청 조건과 동시성을 동일하게 정해야 한다.
