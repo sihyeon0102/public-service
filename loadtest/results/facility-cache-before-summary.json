@@ -1,0 +1,1153 @@
+{
+  "schemaVersion": 1,
+  "title": "Facility Redis cache Before baseline: repeated hot reads without cache",
+  "measuredAt": "2026-09-09 Asia/Seoul",
+  "sourceCommit": "d28ab17173c010081164076a28abd79d77acb286",
+  "scriptSha256": "6E3CC412C9AFC7442AD29FB001F9358712AF733F96F91BA41929FB96A290385D",
+  "environment": {
+    "facilityRows": 1000000,
+    "mysql": "8.4.11",
+    "java": "21.0.12.1",
+    "springBoot": "4.1.1",
+    "hikariMax": 10,
+    "prometheusScrapeIntervalSeconds": 15,
+    "k6Image": "grafana/k6:2.1.0",
+    "baseUrlFromK6": "http://host.docker.internal:8080",
+    "indexes": [
+      "PRIMARY(id)",
+      "idx_facility_region(region)",
+      "idx_facility_region_type(region,type)",
+      "idx_facility_region_district_type(region,district,type)"
+    ],
+    "redisPresent": false,
+    "springCachePresent": false
+  },
+  "design": {
+    "endpointRunsAreIsolated": true,
+    "oneIdenticalUrlPerRun": true,
+    "order": [
+      "A smoke",
+      "B smoke",
+      "A warmup",
+      "B warmup",
+      "A baseline",
+      "B baseline"
+    ],
+    "smoke": {
+      "vus": 1,
+      "durationSeconds": 10
+    },
+    "warmup": {
+      "startVus": 1,
+      "targetVus": 3,
+      "rampUpSeconds": 5,
+      "holdSeconds": 20,
+      "rampDownSeconds": 5
+    },
+    "baselineStages": [
+      {
+        "vus": 5,
+        "rampUpSeconds": 10,
+        "holdSeconds": 40,
+        "rampDownSeconds": 5,
+        "rpsDenominatorSeconds": 55
+      },
+      {
+        "vus": 10,
+        "rampUpSeconds": 10,
+        "holdSeconds": 40,
+        "rampDownSeconds": 5,
+        "rpsDenominatorSeconds": 55
+      },
+      {
+        "vus": 20,
+        "rampUpSeconds": 10,
+        "holdSeconds": 40,
+        "rampDownSeconds": 5,
+        "rpsDenominatorSeconds": 55
+      },
+      {
+        "vus": 40,
+        "rampUpSeconds": 10,
+        "holdSeconds": 40,
+        "rampDownSeconds": 5,
+        "rpsDenominatorSeconds": 55
+      }
+    ],
+    "thinkTimeSeconds": 0.2,
+    "note": "Stage RPS includes ramp-up, hold, and ramp-down. This is a closed-loop VU test, not a constant-arrival-rate capacity test."
+  },
+  "endpoints": {
+    "A": {
+      "query": "region=SEOUL&type=LIBRARY&page=0&size=20",
+      "totalElements": 50000,
+      "smoke": {
+        "requests": 47,
+        "checksRate": 1,
+        "failedRate": 0
+      },
+      "warmup": {
+        "requests": 357,
+        "checksRate": 1,
+        "failedRate": 0
+      },
+      "baseline": {
+        "totalRequests": 15717,
+        "overallRps": 71.3980934152246,
+        "iterations": 15716,
+        "iterationsPerSecond": 71.39355068484251,
+        "checksRate": 1,
+        "failedRate": 0,
+        "vusMax": 40,
+        "overallDuration": {
+          "max": 174.653019,
+          "avg": 25.27418833626011,
+          "med": 19.874064,
+          "p(90)": 41.552995200000005,
+          "p(95)": 51.91399099999999,
+          "p(99)": 85.11213296000001
+        },
+        "stages": [
+          {
+            "vus": 5,
+            "requests": 1085,
+            "rps": 19.727272727272727,
+            "avgMilliseconds": 16.045462764055312,
+            "medianMilliseconds": 15.418583,
+            "p90Milliseconds": 18.774380400000002,
+            "p95Milliseconds": 20.900195599999996,
+            "p99Milliseconds": 26.850928680000017,
+            "maxMilliseconds": 51.860769,
+            "failedRate": 0
+          },
+          {
+            "vus": 10,
+            "requests": 2156,
+            "rps": 39.2,
+            "avgMilliseconds": 18.577048217996317,
+            "medianMilliseconds": 16.823147499999997,
+            "p90Milliseconds": 22.93631,
+            "p95Milliseconds": 27.548417999999998,
+            "p99Milliseconds": 44.00622799999978,
+            "maxMilliseconds": 174.653019,
+            "failedRate": 0
+          },
+          {
+            "vus": 20,
+            "requests": 4322,
+            "rps": 78.58181818181818,
+            "avgMilliseconds": 18.55871085353997,
+            "medianMilliseconds": 17.187416499999998,
+            "p90Milliseconds": 23.8579829,
+            "p95Milliseconds": 27.148908099999993,
+            "p99Milliseconds": 38.49633994,
+            "maxMilliseconds": 54.593118,
+            "failedRate": 0
+          },
+          {
+            "vus": 40,
+            "requests": 8153,
+            "rps": 148.23636363636365,
+            "avgMilliseconds": 31.834648418373547,
+            "medianMilliseconds": 27.655465,
+            "p90Milliseconds": 50.8815644,
+            "p95Milliseconds": 62.13505739999995,
+            "p99Milliseconds": 103.6442570799997,
+            "maxMilliseconds": 173.819928,
+            "failedRate": 0
+          }
+        ]
+      },
+      "server": {
+        "target": "A",
+        "timing": {
+          "mode": "baseline",
+          "target": "A",
+          "startUtc": "2026-09-08T16:09:38.6299465+00:00",
+          "endUtc": "2026-09-08T16:13:19.4814914+00:00",
+          "startUnix": 1788883778.629,
+          "endUnix": 1788883999.481,
+          "exitCode": 0,
+          "scriptSha256": "6E3CC412C9AFC7442AD29FB001F9358712AF733F96F91BA41929FB96A290385D"
+        },
+        "windowDescription": "overall: start+45s to end; stage: nominal start+10s to +50s; step 15s",
+        "queries": {
+          "rps": "sum(rate(http_server_requests_seconds_count{job=\"public-service\",application=\"public-service\",uri=\"/api/facilities\"}[30s]))",
+          "p95": "histogram_quantile(0.95,sum by(le)(rate(http_server_requests_seconds_bucket{job=\"public-service\",application=\"public-service\",uri=\"/api/facilities\"}[30s])))",
+          "errorPct": "100*(sum(rate(http_server_requests_seconds_count{job=\"public-service\",application=\"public-service\",uri=\"/api/facilities\",status=~\"[45]..\"}[30s])) or vector(0))/sum(rate(http_server_requests_seconds_count{job=\"public-service\",application=\"public-service\",uri=\"/api/facilities\"}[30s]))",
+          "processCpu": "process_cpu_usage{job=\"public-service\",application=\"public-service\"}",
+          "systemCpu": "system_cpu_usage{job=\"public-service\",application=\"public-service\"}",
+          "heap": "sum(jvm_memory_used_bytes{job=\"public-service\",application=\"public-service\",area=\"heap\"})",
+          "threads": "jvm_threads_live_threads{job=\"public-service\",application=\"public-service\"}",
+          "hikariActive": "hikaricp_connections_active{job=\"public-service\",application=\"public-service\"}",
+          "hikariIdle": "hikaricp_connections_idle{job=\"public-service\",application=\"public-service\"}",
+          "hikariPending": "hikaricp_connections_pending{job=\"public-service\",application=\"public-service\"}",
+          "hikariMax": "hikaricp_connections_max{job=\"public-service\",application=\"public-service\"}",
+          "grafanaP95": "histogram_quantile(0.95,sum by(le)(rate(http_server_requests_seconds_bucket{job=\"public-service\",application=\"public-service\",uri=\"/api/facilities\"}[5m])))"
+        },
+        "overall": {
+          "rps": {
+            "samples": 12,
+            "min": 19.267951196746452,
+            "avg": 69.10926854760244,
+            "max": 169.93333333333334
+          },
+          "p95": {
+            "samples": 12,
+            "min": 0.018661613336956515,
+            "avg": 0.029533452690244613,
+            "max": 0.059733876906250004
+          },
+          "errorPct": {
+            "samples": 12,
+            "min": 0,
+            "avg": 0,
+            "max": 0
+          },
+          "processCpu": {
+            "samples": 12,
+            "min": 0.00625282415055584,
+            "avg": 0.020921629352359337,
+            "max": 0.05120363046754336
+          },
+          "systemCpu": {
+            "samples": 12,
+            "min": 0.5063073509642162,
+            "avg": 0.6374968519822217,
+            "max": 0.901118157494967
+          },
+          "heap": {
+            "samples": 12,
+            "min": 40481392,
+            "avg": 70563242,
+            "max": 107520976
+          },
+          "threads": {
+            "samples": 12,
+            "min": 25,
+            "avg": 27.75,
+            "max": 42
+          },
+          "hikariActive": {
+            "samples": 12,
+            "min": 0,
+            "avg": 2.1666666666666665,
+            "max": 7
+          },
+          "hikariIdle": {
+            "samples": 12,
+            "min": 3,
+            "avg": 7.833333333333333,
+            "max": 10
+          },
+          "hikariPending": {
+            "samples": 12,
+            "min": 0,
+            "avg": 0,
+            "max": 0
+          },
+          "hikariMax": {
+            "samples": 12,
+            "min": 10,
+            "avg": 10,
+            "max": 10
+          },
+          "grafanaP95": {
+            "samples": 12,
+            "min": 0.021170673741007184,
+            "avg": 0.025618876138887123,
+            "max": 0.043713303356761546
+          }
+        },
+        "stages": [
+          {
+            "vus": 5,
+            "metrics": {
+              "rps": {
+                "samples": 3,
+                "min": 1.600106673778252,
+                "avg": 15.111607440496035,
+                "max": 23
+              },
+              "p95": {
+                "samples": 3,
+                "min": 0.018661613336956515,
+                "avg": 0.020020315598429945,
+                "max": 0.021996794
+              },
+              "errorPct": {
+                "samples": 3,
+                "min": 0,
+                "avg": 0,
+                "max": 0
+              },
+              "processCpu": {
+                "samples": 3,
+                "min": 0.0011723870595880593,
+                "avg": 0.0049907825383328904,
+                "max": 0.007549692043875357
+              },
+              "systemCpu": {
+                "samples": 3,
+                "min": 0.44425132643144805,
+                "avg": 0.488899614209888,
+                "max": 0.5117749249616457
+              },
+              "heap": {
+                "samples": 3,
+                "min": 61391320,
+                "avg": 72568093.33333333,
+                "max": 86512024
+              },
+              "threads": {
+                "samples": 3,
+                "min": 25,
+                "avg": 25,
+                "max": 25
+              },
+              "hikariActive": {
+                "samples": 3,
+                "min": 0,
+                "avg": 0.6666666666666666,
+                "max": 2
+              },
+              "hikariIdle": {
+                "samples": 3,
+                "min": 8,
+                "avg": 9.333333333333334,
+                "max": 10
+              },
+              "hikariPending": {
+                "samples": 3,
+                "min": 0,
+                "avg": 0,
+                "max": 0
+              },
+              "hikariMax": {
+                "samples": 3,
+                "min": 10,
+                "avg": 10,
+                "max": 10
+              },
+              "grafanaP95": {
+                "samples": 3,
+                "min": 0.021170673741007184,
+                "avg": 0.021641042603632116,
+                "max": 0.02208429421428571
+              }
+            }
+          },
+          {
+            "vus": 10,
+            "metrics": {
+              "rps": {
+                "samples": 3,
+                "min": 19.267951196746452,
+                "avg": 29.423164507263447,
+                "max": 45.86666666666667
+              },
+              "p95": {
+                "samples": 3,
+                "min": 0.021376076707446803,
+                "avg": 0.021789677722127906,
+                "max": 0.022166896318750004
+              },
+              "errorPct": {
+                "samples": 3,
+                "min": 0,
+                "avg": 0,
+                "max": 0
+              },
+              "processCpu": {
+                "samples": 3,
+                "min": 0.00625282415055584,
+                "avg": 0.008332516367914697,
+                "max": 0.01197150649870836
+              },
+              "systemCpu": {
+                "samples": 3,
+                "min": 0.5063073509642162,
+                "avg": 0.5279853456449324,
+                "max": 0.5403787300675786
+              },
+              "heap": {
+                "samples": 3,
+                "min": 48800720,
+                "avg": 80975890.66666667,
+                "max": 107520976
+              },
+              "threads": {
+                "samples": 3,
+                "min": 25,
+                "avg": 25,
+                "max": 25
+              },
+              "hikariActive": {
+                "samples": 3,
+                "min": 0,
+                "avg": 0.6666666666666666,
+                "max": 1
+              },
+              "hikariIdle": {
+                "samples": 3,
+                "min": 9,
+                "avg": 9.333333333333334,
+                "max": 10
+              },
+              "hikariPending": {
+                "samples": 3,
+                "min": 0,
+                "avg": 0,
+                "max": 0
+              },
+              "hikariMax": {
+                "samples": 3,
+                "min": 10,
+                "avg": 10,
+                "max": 10
+              },
+              "grafanaP95": {
+                "samples": 3,
+                "min": 0.021222576641129032,
+                "avg": 0.021380736685978407,
+                "max": 0.021529920549549553
+              }
+            }
+          },
+          {
+            "vus": 20,
+            "metrics": {
+              "rps": {
+                "samples": 3,
+                "min": 37,
+                "avg": 63.24583268514198,
+                "max": 90.26666666666667
+              },
+              "p95": {
+                "samples": 3,
+                "min": 0.023874635875,
+                "avg": 0.02689013665972222,
+                "max": 0.029010601937499995
+              },
+              "errorPct": {
+                "samples": 3,
+                "min": 0,
+                "avg": 0,
+                "max": 0
+              },
+              "processCpu": {
+                "samples": 3,
+                "min": 0.01406511489239336,
+                "avg": 0.0216545273439291,
+                "max": 0.029667197747674675
+              },
+              "systemCpu": {
+                "samples": 3,
+                "min": 0.5784316221412387,
+                "avg": 0.6434412208962487,
+                "max": 0.718395606127621
+              },
+              "heap": {
+                "samples": 3,
+                "min": 40481392,
+                "avg": 67058453.333333336,
+                "max": 90792896
+              },
+              "threads": {
+                "samples": 3,
+                "min": 25,
+                "avg": 25,
+                "max": 25
+              },
+              "hikariActive": {
+                "samples": 3,
+                "min": 0,
+                "avg": 1.6666666666666667,
+                "max": 4
+              },
+              "hikariIdle": {
+                "samples": 3,
+                "min": 6,
+                "avg": 8.333333333333334,
+                "max": 10
+              },
+              "hikariPending": {
+                "samples": 3,
+                "min": 0,
+                "avg": 0,
+                "max": 0
+              },
+              "hikariMax": {
+                "samples": 3,
+                "min": 10,
+                "avg": 10,
+                "max": 10
+              },
+              "grafanaP95": {
+                "samples": 3,
+                "min": 0.022684748583333296,
+                "avg": 0.023535826162000454,
+                "max": 0.024985130269855594
+              }
+            }
+          },
+          {
+            "vus": 40,
+            "metrics": {
+              "rps": {
+                "samples": 3,
+                "min": 62.13747583172212,
+                "avg": 130.54180548200875,
+                "max": 169.93333333333334
+              },
+              "p95": {
+                "samples": 3,
+                "min": 0.020302125818181818,
+                "avg": 0.046139856872429656,
+                "max": 0.059733876906250004
+              },
+              "errorPct": {
+                "samples": 3,
+                "min": 0,
+                "avg": 0,
+                "max": 0
+              },
+              "processCpu": {
+                "samples": 3,
+                "min": 0.01458738814099026,
+                "avg": 0.03764221055786269,
+                "max": 0.05120363046754336
+              },
+              "systemCpu": {
+                "samples": 3,
+                "min": 0.5604633106722006,
+                "avg": 0.7760019677910801,
+                "max": 0.901118157494967
+              },
+              "heap": {
+                "samples": 3,
+                "min": 48900784,
+                "avg": 58793008,
+                "max": 78535248
+              },
+              "threads": {
+                "samples": 3,
+                "min": 25,
+                "avg": 36,
+                "max": 42
+              },
+              "hikariActive": {
+                "samples": 3,
+                "min": 2,
+                "avg": 4,
+                "max": 7
+              },
+              "hikariIdle": {
+                "samples": 3,
+                "min": 3,
+                "avg": 6,
+                "max": 8
+              },
+              "hikariPending": {
+                "samples": 3,
+                "min": 0,
+                "avg": 0,
+                "max": 0
+              },
+              "hikariMax": {
+                "samples": 3,
+                "min": 10,
+                "avg": 10,
+                "max": 10
+              },
+              "grafanaP95": {
+                "samples": 3,
+                "min": 0.024195517333333336,
+                "avg": 0.03482405510294828,
+                "max": 0.043713303356761546
+              }
+            }
+          }
+        ]
+      },
+      "databaseDuringBaseline": {
+        "source": "Performance Schema events_statements_summary_by_digest snapshots before and after the run",
+        "caveat": "Non-transactional counters were sampled during concurrent execution; deltas are approximate and differ from HTTP request count by tens.",
+        "deltas": [
+          {
+            "kind": "page",
+            "digest": "27fcf6fc370708f47008512fc3f73761260d16be0e341894dcf735deb95167de",
+            "digestText": "SELECT `f1_0` . `id` , `f1_0` . `address` , `f1_0` . `district` , `f1_0` . `latitude` , `f1_0` . `longitude` , `f1_0` . `name` , `f1_0` . `operating_status` , `f1_0` . `region` , `f1_0` . `type` FROM `facility` `f1_0` WHERE `f1_0` . `region` = ? AND `f1_0` . `type` = ? ORDER BY `f1_0` . `id` LIMIT ?, ...",
+            "statementCountDelta": 15677,
+            "rowsExaminedDelta": 314000,
+            "rowsSentDelta": 313920,
+            "totalTimerMilliseconds": 8400.016124
+          },
+          {
+            "kind": "count",
+            "digest": "ba4e471bdd5e73467479b55b64a502570936eecd54e26b948a873d5388c8ef7f",
+            "digestText": "SELECT COUNT ( `f1_0` . `id` ) FROM `facility` `f1_0` WHERE `f1_0` . `region` = ? AND `f1_0` . `type` = ?",
+            "statementCountDelta": 15708,
+            "rowsExaminedDelta": 785800000,
+            "rowsSentDelta": 15714,
+            "totalTimerMilliseconds": 141838.75881
+          }
+        ]
+      },
+      "databaseSingleRequest": {
+        "pageStatements": 1,
+        "pageRowsExamined": 20,
+        "countStatements": 1,
+        "countRowsExamined": 50000
+      }
+    },
+    "B": {
+      "query": "region=GWANGJU&page=0&size=20",
+      "totalElements": 40000,
+      "smoke": {
+        "requests": 47,
+        "checksRate": 1,
+        "failedRate": 0
+      },
+      "warmup": {
+        "requests": 365,
+        "checksRate": 1,
+        "failedRate": 0
+      },
+      "baseline": {
+        "totalRequests": 16223,
+        "overallRps": 73.6684720449697,
+        "iterations": 16222,
+        "iterationsPerSecond": 73.66393105550752,
+        "checksRate": 1,
+        "failedRate": 0,
+        "vusMax": 40,
+        "overallDuration": {
+          "avg": 18.408692584848602,
+          "med": 15.194288,
+          "p(90)": 27.579407800000006,
+          "p(95)": 35.990498599999995,
+          "p(99)": 63.68906802,
+          "max": 202.708561
+        },
+        "stages": [
+          {
+            "vus": 5,
+            "requests": 1087,
+            "rps": 19.763636363636362,
+            "avgMilliseconds": 15.65456993652254,
+            "medianMilliseconds": 14.760829,
+            "p90Milliseconds": 19.247805399999997,
+            "p95Milliseconds": 21.93760760000002,
+            "p99Milliseconds": 34.6923232600001,
+            "maxMilliseconds": 52.549623,
+            "failedRate": 0
+          },
+          {
+            "vus": 10,
+            "requests": 2172,
+            "rps": 39.49090909090909,
+            "avgMilliseconds": 17.017575470073627,
+            "medianMilliseconds": 14.899708,
+            "p90Milliseconds": 22.17020870000001,
+            "p95Milliseconds": 28.00943649999999,
+            "p99Milliseconds": 53.13035062999999,
+            "maxMilliseconds": 113.631847,
+            "failedRate": 0
+          },
+          {
+            "vus": 20,
+            "requests": 4385,
+            "rps": 79.72727272727273,
+            "avgMilliseconds": 15.512581934321535,
+            "medianMilliseconds": 14.346353,
+            "p90Milliseconds": 20.2405956,
+            "p95Milliseconds": 23.541601,
+            "p99Milliseconds": 33.46111339999991,
+            "maxMilliseconds": 58.033873,
+            "failedRate": 0
+          },
+          {
+            "vus": 40,
+            "requests": 8578,
+            "rps": 155.96363636363637,
+            "avgMilliseconds": 20.590665299836896,
+            "medianMilliseconds": 16.3605315,
+            "p90Milliseconds": 33.166294300000004,
+            "p95Milliseconds": 44.564491999999994,
+            "p99Milliseconds": 72.6241417599999,
+            "maxMilliseconds": 202.708561,
+            "failedRate": 0
+          }
+        ]
+      },
+      "server": {
+        "target": "B",
+        "timing": {
+          "mode": "baseline",
+          "target": "B",
+          "startUtc": "2026-09-08T16:15:45.6003675+00:00",
+          "endUtc": "2026-09-08T16:19:26.8426024+00:00",
+          "startUnix": 1788884145.6,
+          "endUnix": 1788884366.842,
+          "exitCode": 0,
+          "scriptSha256": "6E3CC412C9AFC7442AD29FB001F9358712AF733F96F91BA41929FB96A290385D"
+        },
+        "windowDescription": "overall: start+45s to end; stage: nominal start+10s to +50s; step 15s",
+        "queries": {
+          "rps": "sum(rate(http_server_requests_seconds_count{job=\"public-service\",application=\"public-service\",uri=\"/api/facilities\"}[30s]))",
+          "p95": "histogram_quantile(0.95,sum by(le)(rate(http_server_requests_seconds_bucket{job=\"public-service\",application=\"public-service\",uri=\"/api/facilities\"}[30s])))",
+          "errorPct": "100*(sum(rate(http_server_requests_seconds_count{job=\"public-service\",application=\"public-service\",uri=\"/api/facilities\",status=~\"[45]..\"}[30s])) or vector(0))/sum(rate(http_server_requests_seconds_count{job=\"public-service\",application=\"public-service\",uri=\"/api/facilities\"}[30s]))",
+          "processCpu": "process_cpu_usage{job=\"public-service\",application=\"public-service\"}",
+          "systemCpu": "system_cpu_usage{job=\"public-service\",application=\"public-service\"}",
+          "heap": "sum(jvm_memory_used_bytes{job=\"public-service\",application=\"public-service\",area=\"heap\"})",
+          "threads": "jvm_threads_live_threads{job=\"public-service\",application=\"public-service\"}",
+          "hikariActive": "hikaricp_connections_active{job=\"public-service\",application=\"public-service\"}",
+          "hikariIdle": "hikaricp_connections_idle{job=\"public-service\",application=\"public-service\"}",
+          "hikariPending": "hikaricp_connections_pending{job=\"public-service\",application=\"public-service\"}",
+          "hikariMax": "hikaricp_connections_max{job=\"public-service\",application=\"public-service\"}",
+          "grafanaP95": "histogram_quantile(0.95,sum by(le)(rate(http_server_requests_seconds_bucket{job=\"public-service\",application=\"public-service\",uri=\"/api/facilities\"}[5m])))"
+        },
+        "overall": {
+          "rps": {
+            "samples": 12,
+            "min": 16.2,
+            "avg": 78.40998046207777,
+            "max": 182.66666666666666
+          },
+          "p95": {
+            "samples": 12,
+            "min": 0.016075667385714285,
+            "avg": 0.02381829880382269,
+            "max": 0.03871665099999999
+          },
+          "errorPct": {
+            "samples": 12,
+            "min": 0,
+            "avg": 0,
+            "max": 0
+          },
+          "processCpu": {
+            "samples": 12,
+            "min": 0.0041650121294816034,
+            "avg": 0.02347130752142816,
+            "max": 0.05531781592496678
+          },
+          "systemCpu": {
+            "samples": 12,
+            "min": 0.4950380443376604,
+            "avg": 0.6071925348747781,
+            "max": 0.81196123152893
+          },
+          "heap": {
+            "samples": 12,
+            "min": 45019816,
+            "avg": 77517614.66666667,
+            "max": 103796520
+          },
+          "threads": {
+            "samples": 12,
+            "min": 25,
+            "avg": 26,
+            "max": 31
+          },
+          "hikariActive": {
+            "samples": 12,
+            "min": 0,
+            "avg": 1.8333333333333333,
+            "max": 7
+          },
+          "hikariIdle": {
+            "samples": 12,
+            "min": 3,
+            "avg": 8.166666666666666,
+            "max": 10
+          },
+          "hikariPending": {
+            "samples": 12,
+            "min": 0,
+            "avg": 0,
+            "max": 0
+          },
+          "hikariMax": {
+            "samples": 12,
+            "min": 10,
+            "avg": 10,
+            "max": 10
+          },
+          "grafanaP95": {
+            "samples": 12,
+            "min": 0.021651455092372873,
+            "avg": 0.03683573204645803,
+            "max": 0.05302547387295078
+          }
+        },
+        "stages": [
+          {
+            "vus": 5,
+            "metrics": {
+              "rps": {
+                "samples": 3,
+                "min": 0,
+                "avg": 11.556066700743012,
+                "max": 23.001533435562372
+              },
+              "p95": {
+                "samples": 2,
+                "min": 0.01662741914285714,
+                "avg": 0.019328480730212354,
+                "max": 0.02202954231756757
+              },
+              "errorPct": {
+                "samples": 2,
+                "min": 0,
+                "avg": 0,
+                "max": 0
+              },
+              "processCpu": {
+                "samples": 3,
+                "min": 0.00039077474748840254,
+                "avg": 0.004514232374236028,
+                "max": 0.008464214741022873
+              },
+              "systemCpu": {
+                "samples": 3,
+                "min": 0.4130888360920153,
+                "avg": 0.4949461935251094,
+                "max": 0.5434709262220454
+              },
+              "heap": {
+                "samples": 3,
+                "min": 57593728,
+                "avg": 79903816,
+                "max": 111988976
+              },
+              "threads": {
+                "samples": 3,
+                "min": 25,
+                "avg": 25,
+                "max": 25
+              },
+              "hikariActive": {
+                "samples": 3,
+                "min": 0,
+                "avg": 0,
+                "max": 0
+              },
+              "hikariIdle": {
+                "samples": 3,
+                "min": 10,
+                "avg": 10,
+                "max": 10
+              },
+              "hikariPending": {
+                "samples": 3,
+                "min": 0,
+                "avg": 0,
+                "max": 0
+              },
+              "hikariMax": {
+                "samples": 3,
+                "min": 10,
+                "avg": 10,
+                "max": 10
+              },
+              "grafanaP95": {
+                "samples": 3,
+                "min": 0.04862052276365188,
+                "avg": 0.04896102030202746,
+                "max": 0.04915304187457336
+              }
+            }
+          },
+          {
+            "vus": 10,
+            "metrics": {
+              "rps": {
+                "samples": 3,
+                "min": 16.2,
+                "avg": 33.49091286245574,
+                "max": 45.539405254033866
+              },
+              "p95": {
+                "samples": 3,
+                "min": 0.016075667385714285,
+                "avg": 0.02174024025357142,
+                "max": 0.029618238249999963
+              },
+              "errorPct": {
+                "samples": 3,
+                "min": 0,
+                "avg": 0,
+                "max": 0
+              },
+              "processCpu": {
+                "samples": 3,
+                "min": 0.0041650121294816034,
+                "avg": 0.011671428758783587,
+                "max": 0.017189861084719524
+              },
+              "systemCpu": {
+                "samples": 3,
+                "min": 0.5157646341101081,
+                "avg": 0.58068486213861,
+                "max": 0.6479384780514899
+              },
+              "heap": {
+                "samples": 3,
+                "min": 49106440,
+                "avg": 82700501.33333333,
+                "max": 103716128
+              },
+              "threads": {
+                "samples": 3,
+                "min": 25,
+                "avg": 25,
+                "max": 25
+              },
+              "hikariActive": {
+                "samples": 3,
+                "min": 1,
+                "avg": 1.3333333333333333,
+                "max": 2
+              },
+              "hikariIdle": {
+                "samples": 3,
+                "min": 8,
+                "avg": 8.666666666666666,
+                "max": 9
+              },
+              "hikariPending": {
+                "samples": 3,
+                "min": 0,
+                "avg": 0,
+                "max": 0
+              },
+              "hikariMax": {
+                "samples": 3,
+                "min": 10,
+                "avg": 10,
+                "max": 10
+              },
+              "grafanaP95": {
+                "samples": 3,
+                "min": 0.05102758973333332,
+                "avg": 0.05210055392153914,
+                "max": 0.05302547387295078
+              }
+            }
+          },
+          {
+            "vus": 20,
+            "metrics": {
+              "rps": {
+                "samples": 3,
+                "min": 34.402293486232416,
+                "avg": 72.42705069226838,
+                "max": 92.20614707647177
+              },
+              "p95": {
+                "samples": 3,
+                "min": 0.019805298707317065,
+                "avg": 0.022237501242192023,
+                "max": 0.026130031258620706
+              },
+              "errorPct": {
+                "samples": 3,
+                "min": 0,
+                "avg": 0,
+                "max": 0
+              },
+              "processCpu": {
+                "samples": 3,
+                "min": 0.010152003078712071,
+                "avg": 0.02126899163964285,
+                "max": 0.029325033679339797
+              },
+              "systemCpu": {
+                "samples": 3,
+                "min": 0.5243978906360147,
+                "avg": 0.5956488359148583,
+                "max": 0.6968306413206939
+              },
+              "heap": {
+                "samples": 3,
+                "min": 45019816,
+                "avg": 74376408,
+                "max": 99490784
+              },
+              "threads": {
+                "samples": 3,
+                "min": 25,
+                "avg": 25,
+                "max": 25
+              },
+              "hikariActive": {
+                "samples": 3,
+                "min": 0,
+                "avg": 1.3333333333333333,
+                "max": 3
+              },
+              "hikariIdle": {
+                "samples": 3,
+                "min": 7,
+                "avg": 8.666666666666666,
+                "max": 10
+              },
+              "hikariPending": {
+                "samples": 3,
+                "min": 0,
+                "avg": 0,
+                "max": 0
+              },
+              "hikariMax": {
+                "samples": 3,
+                "min": 10,
+                "avg": 10,
+                "max": 10
+              },
+              "grafanaP95": {
+                "samples": 3,
+                "min": 0.022220656640625,
+                "avg": 0.030467045051892582,
+                "max": 0.0437113632094972
+              }
+            }
+          },
+          {
+            "vus": 40,
+            "metrics": {
+              "rps": {
+                "samples": 3,
+                "min": 86.6,
+                "avg": 124.78011274825728,
+                "max": 182.66666666666666
+              },
+              "p95": {
+                "samples": 3,
+                "min": 0.0167073108,
+                "avg": 0.022614096944527345,
+                "max": 0.030048744283582042
+              },
+              "errorPct": {
+                "samples": 3,
+                "min": 0,
+                "avg": 0,
+                "max": 0
+              },
+              "processCpu": {
+                "samples": 3,
+                "min": 0.022015000311938746,
+                "avg": 0.03420837546655123,
+                "max": 0.05119590226084906
+              },
+              "systemCpu": {
+                "samples": 3,
+                "min": 0.5229356344433234,
+                "avg": 0.6183760909226009,
+                "max": 0.7696966626327943
+              },
+              "heap": {
+                "samples": 3,
+                "min": 57619560,
+                "avg": 75802634.66666667,
+                "max": 91152176
+              },
+              "threads": {
+                "samples": 3,
+                "min": 25,
+                "avg": 27,
+                "max": 31
+              },
+              "hikariActive": {
+                "samples": 3,
+                "min": 0,
+                "avg": 4,
+                "max": 7
+              },
+              "hikariIdle": {
+                "samples": 3,
+                "min": 3,
+                "avg": 6,
+                "max": 10
+              },
+              "hikariPending": {
+                "samples": 3,
+                "min": 0,
+                "avg": 0,
+                "max": 0
+              },
+              "hikariMax": {
+                "samples": 3,
+                "min": 10,
+                "avg": 10,
+                "max": 10
+              },
+              "grafanaP95": {
+                "samples": 3,
+                "min": 0.021651455092372873,
+                "avg": 0.02232268216651495,
+                "max": 0.023544184027542353
+              }
+            }
+          }
+        ]
+      },
+      "databaseDuringBaseline": {
+        "source": "Performance Schema events_statements_summary_by_digest snapshots before and after the run",
+        "caveat": "Non-transactional counters were sampled during concurrent execution; deltas are approximate and differ from HTTP request count by tens.",
+        "deltas": [
+          {
+            "kind": "page",
+            "digest": "5d2df77cfe08f7d833dd53b47efb5ac81b0992e44e39713ffd284dfa6f14a3ee",
+            "digestText": "SELECT `f1_0` . `id` , `f1_0` . `address` , `f1_0` . `district` , `f1_0` . `latitude` , `f1_0` . `longitude` , `f1_0` . `name` , `f1_0` . `operating_status` , `f1_0` . `region` , `f1_0` . `type` FROM `facility` `f1_0` WHERE `f1_0` . `region` = ? ORDER BY `f1_0` . `id` LIMIT ?, ...",
+            "statementCountDelta": 16174,
+            "rowsExaminedDelta": 324180,
+            "rowsSentDelta": 324080,
+            "totalTimerMilliseconds": 6813.886389
+          },
+          {
+            "kind": "count",
+            "digest": "8b68a05e72a2938547e9169f4505dab6651baaafe95b328e634238c1f9db30f8",
+            "digestText": "SELECT COUNT ( `f1_0` . `id` ) FROM `facility` `f1_0` WHERE `f1_0` . `region` = ?",
+            "statementCountDelta": 16214,
+            "rowsExaminedDelta": 648760000,
+            "rowsSentDelta": 16219,
+            "totalTimerMilliseconds": 78586.380257
+          }
+        ]
+      },
+      "databaseSingleRequest": {
+        "pageStatements": 1,
+        "pageRowsExamined": 20,
+        "countStatements": 1,
+        "countRowsExamined": 40000
+      }
+    }
+  },
+  "verification": {
+    "responseChecks": "HTTP 200, JSON, content 20, expected totalElements, page 0 and size 20",
+    "applicationStateChanged": false,
+    "workloadWasOnlyExperimentalVariable": true,
+    "finalizedAt": "2026-09-09 Asia/Seoul",
+    "buildCommand": ".\\gradlew.bat build --rerun-tasks",
+    "buildSuccessful": true,
+    "buildSeconds": 22,
+    "tests": 18,
+    "testFailures": 0,
+    "testErrors": 0,
+    "testSkipped": 0,
+    "testProcessDdlAuto": "validate",
+    "facilityRows": 1000000,
+    "distinctNames": 1000000,
+    "dataChecksum": "2148598155341640",
+    "districtsPerRegion": 10,
+    "applicationHealth": "UP",
+    "prometheusTarget": "UP",
+    "dockerServices": [
+      "mysql",
+      "prometheus",
+      "grafana"
+    ]
+  }
+}
