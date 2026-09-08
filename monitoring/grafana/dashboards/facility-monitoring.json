@@ -1,0 +1,684 @@
+{
+  "uid": "facility-monitoring",
+  "title": "Facility Local Monitoring",
+  "description": "Local Facility API, JVM and Hikari metrics. 15s scrape; 5m HTTP rate window. No load-test results.",
+  "tags": [
+    "public-service",
+    "local",
+    "baseline"
+  ],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": false,
+  "refresh": "15s",
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "15s",
+      "30s",
+      "1m",
+      "5m"
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "HTTP Request Rate (RPS)",
+      "description": "Facility API만 집계합니다. Actuator scrape 요청은 제외합니다.",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "public-service-prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": false
+          },
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (method, uri) (rate(http_server_requests_seconds_count{job=\"public-service\",application=\"public-service\",uri=~\"/api/facilities.*\"}[5m]))",
+          "legendFormat": "{{method}} {{uri}}",
+          "range": true,
+          "editorMode": "code",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "public-service-prometheus"
+          }
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "HTTP p95 Latency",
+      "description": "최근 5분의 Facility HTTP histogram으로 계산한 근사 p95. 모든 응답 상태를 포함하며 트래픽이 없으면 값이 없을 수 있습니다.",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "public-service-prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": false
+          },
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.95, sum by (le, uri) (rate(http_server_requests_seconds_bucket{job=\"public-service\",application=\"public-service\",uri=~\"/api/facilities.*\"}[5m])))",
+          "legendFormat": "{{uri}} p95",
+          "range": true,
+          "editorMode": "code",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "public-service-prometheus"
+          }
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "HTTP Error Rate (4xx / 5xx)",
+      "description": "Facility 전체 요청 중 4xx/5xx의 비율(%). 요청이 없으면 NaN일 수 있습니다.",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "public-service-prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": false
+          },
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "100 * (sum(rate(http_server_requests_seconds_count{job=\"public-service\",application=\"public-service\",uri=~\"/api/facilities.*\",status=~\"4..\"}[5m])) or (0 * sum(rate(http_server_requests_seconds_count{job=\"public-service\",application=\"public-service\",uri=~\"/api/facilities.*\"}[5m])))) / sum(rate(http_server_requests_seconds_count{job=\"public-service\",application=\"public-service\",uri=~\"/api/facilities.*\"}[5m]))",
+          "legendFormat": "4xx %",
+          "range": true,
+          "editorMode": "code",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "public-service-prometheus"
+          }
+        },
+        {
+          "refId": "B",
+          "expr": "100 * (sum(rate(http_server_requests_seconds_count{job=\"public-service\",application=\"public-service\",uri=~\"/api/facilities.*\",status=~\"5..\"}[5m])) or (0 * sum(rate(http_server_requests_seconds_count{job=\"public-service\",application=\"public-service\",uri=~\"/api/facilities.*\"}[5m])))) / sum(rate(http_server_requests_seconds_count{job=\"public-service\",application=\"public-service\",uri=~\"/api/facilities.*\"}[5m]))",
+          "legendFormat": "5xx %",
+          "range": true,
+          "editorMode": "code",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "public-service-prometheus"
+          }
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "JVM Heap Memory",
+      "description": "heap 영역의 used / committed / max 합계입니다.",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "public-service-prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": false
+          },
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(jvm_memory_used_bytes{job=\"public-service\",application=\"public-service\",area=\"heap\"})",
+          "legendFormat": "used",
+          "range": true,
+          "editorMode": "code",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "public-service-prometheus"
+          }
+        },
+        {
+          "refId": "B",
+          "expr": "sum(jvm_memory_committed_bytes{job=\"public-service\",application=\"public-service\",area=\"heap\"})",
+          "legendFormat": "committed",
+          "range": true,
+          "editorMode": "code",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "public-service-prometheus"
+          }
+        },
+        {
+          "refId": "C",
+          "expr": "sum(jvm_memory_max_bytes{job=\"public-service\",application=\"public-service\",area=\"heap\"} >= 0)",
+          "legendFormat": "max",
+          "range": true,
+          "editorMode": "code",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "public-service-prometheus"
+          }
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Process / System CPU",
+      "description": "JVM 프로세스와 Windows host CPU 사용률. MySQL container CPU는 이 패널의 별도 측정 대상이 아닙니다.",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "public-service-prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": false
+          },
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "process_cpu_usage{job=\"public-service\",application=\"public-service\"}",
+          "legendFormat": "JVM process",
+          "range": true,
+          "editorMode": "code",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "public-service-prometheus"
+          }
+        },
+        {
+          "refId": "B",
+          "expr": "system_cpu_usage{job=\"public-service\",application=\"public-service\"}",
+          "legendFormat": "Windows system",
+          "range": true,
+          "editorMode": "code",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "public-service-prometheus"
+          }
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "JVM Threads",
+      "description": "JVM live / daemon thread 수.",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "public-service-prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": false
+          },
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "jvm_threads_live_threads{job=\"public-service\",application=\"public-service\"}",
+          "legendFormat": "Live",
+          "range": true,
+          "editorMode": "code",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "public-service-prometheus"
+          }
+        },
+        {
+          "refId": "B",
+          "expr": "jvm_threads_daemon_threads{job=\"public-service\",application=\"public-service\"}",
+          "legendFormat": "Daemon",
+          "range": true,
+          "editorMode": "code",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "public-service-prometheus"
+          }
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Hikari Active Connections",
+      "description": "사용 중인 DB 연결 수.",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "public-service-prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 24
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": false
+          },
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "hikaricp_connections_active{job=\"public-service\",application=\"public-service\"}",
+          "legendFormat": "{{pool}}",
+          "range": true,
+          "editorMode": "code",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "public-service-prometheus"
+          }
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Hikari Idle Connections",
+      "description": "풀에서 대기 중인 DB 연결 수.",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "public-service-prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 24
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": false
+          },
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "hikaricp_connections_idle{job=\"public-service\",application=\"public-service\"}",
+          "legendFormat": "{{pool}}",
+          "range": true,
+          "editorMode": "code",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "public-service-prometheus"
+          }
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "Hikari Pending Connections",
+      "description": "연결을 얻기 위해 기다리는 스레드 수이며 연결 수 자체는 아닙니다.",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "public-service-prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 32
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": false
+          },
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "hikaricp_connections_pending{job=\"public-service\",application=\"public-service\"}",
+          "legendFormat": "{{pool}}",
+          "range": true,
+          "editorMode": "code",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "public-service-prometheus"
+          }
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "title": "Hikari Max Connections",
+      "description": "풀에서 허용하는 최대 연결 수.",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "public-service-prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 32
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": false
+          },
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "hikaricp_connections_max{job=\"public-service\",application=\"public-service\"}",
+          "legendFormat": "{{pool}}",
+          "range": true,
+          "editorMode": "code",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "public-service-prometheus"
+          }
+        }
+      ]
+    }
+  ]
+}

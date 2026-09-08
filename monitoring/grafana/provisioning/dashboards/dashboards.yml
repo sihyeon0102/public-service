@@ -1,0 +1,12 @@
+apiVersion: 1
+
+providers:
+  - name: public-service
+    orgId: 1
+    folder: Public Service
+    type: file
+    disableDeletion: false
+    allowUiUpdates: false
+    updateIntervalSeconds: 30
+    options:
+      path: /var/lib/grafana/dashboards
