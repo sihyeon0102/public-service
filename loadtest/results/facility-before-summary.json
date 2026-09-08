@@ -1,0 +1,941 @@
+{
+  "schemaVersion": 1,
+  "title": "Facility HTTP Performance Before Baseline",
+  "measuredAt": "2026-09-08",
+  "sourceCommit": "88a260f089f1a620fd905051924011bb10d358bf",
+  "environment": {
+    "facilityRows": 1000000,
+    "indexes": [
+      "PRIMARY(id)"
+    ],
+    "java": "21.0.12.1",
+    "springBoot": "4.1.1",
+    "mysql": "8.4.11",
+    "k6Image": "grafana/k6:2.1.0",
+    "hikariMax": 10,
+    "prometheusScrapeIntervalSeconds": 15,
+    "baseUrlFromK6": "http://host.docker.internal:8080",
+    "thinkTimeSeconds": 0.2
+  },
+  "design": {
+    "isolatedEndpointRuns": true,
+    "smoke": {
+      "vus": 1,
+      "durationSeconds": 10
+    },
+    "warmup": {
+      "startVUs": 1,
+      "targetVUs": 3,
+      "rampUpSeconds": 5,
+      "holdSeconds": 20,
+      "rampDownSeconds": 5
+    },
+    "baselineStages": [
+      {
+        "vus": 5,
+        "rampUpSeconds": 10,
+        "holdSeconds": 40,
+        "rampDownSeconds": 5,
+        "reportedWindowSeconds": 55
+      },
+      {
+        "vus": 10,
+        "rampUpSeconds": 10,
+        "holdSeconds": 40,
+        "rampDownSeconds": 5,
+        "reportedWindowSeconds": 55
+      },
+      {
+        "vus": 20,
+        "rampUpSeconds": 10,
+        "holdSeconds": 40,
+        "rampDownSeconds": 5,
+        "reportedWindowSeconds": 55
+      },
+      {
+        "vus": 40,
+        "rampUpSeconds": 10,
+        "holdSeconds": 40,
+        "rampDownSeconds": 5,
+        "reportedWindowSeconds": 55
+      }
+    ],
+    "note": "Stage RPS is stage request count / 55 seconds and includes ramp-up, hold, and ramp-down."
+  },
+  "endpoints": {
+    "A": {
+      "name": "seoul_library",
+      "query": "region=SEOUL&type=LIBRARY&page=0&size=20",
+      "totalElements": 50000,
+      "dbBaseline": "Page scanned 80 rows; COUNT scanned 1,000,000 rows.",
+      "smoke": {
+        "requests": 32,
+        "avg_ms": 131.1387285625,
+        "p95_ms": 145.1073131,
+        "checksRate": 1,
+        "httpFailedRate": 0
+      },
+      "warmup": {
+        "requests": 225,
+        "avg_ms": 147.9695858844,
+        "p95_ms": 180.2824918,
+        "checksRate": 1,
+        "httpFailedRate": 0
+      },
+      "baseline": {
+        "total_requests": 4901,
+        "overall_rps": 22.234131356991373,
+        "iterations": 4900,
+        "iterations_per_second": 22.229594705010758,
+        "checks_rate": 1,
+        "http_failed_rate": 0,
+        "vus_max": 40,
+        "overall_duration": {
+          "p(95)": 1171.027131,
+          "p(99)": 1363.835095,
+          "max": 1852.159466,
+          "avg": 527.9324702942255,
+          "med": 392.537711,
+          "p(90)": 1094.071569
+        },
+        "stages": [
+          {
+            "vus": 5,
+            "requests": 638,
+            "rps": 11.6,
+            "avg_ms": 168.058419338558,
+            "median_ms": 156.866501,
+            "p90_ms": 216.8977811,
+            "p95_ms": 254.71403709999993,
+            "p99_ms": 321.84476890999997,
+            "max_ms": 409.095607,
+            "failed_rate": 0
+          },
+          {
+            "vus": 10,
+            "requests": 1018,
+            "rps": 18.509090909090908,
+            "avg_ms": 263.73272878389054,
+            "median_ms": 236.7509205,
+            "p90_ms": 404.1322745000001,
+            "p95_ms": 462.24814795,
+            "p99_ms": 516.63012612,
+            "max_ms": 598.320589,
+            "failed_rate": 0
+          },
+          {
+            "vus": 20,
+            "requests": 1578,
+            "rps": 28.69090909090909,
+            "avg_ms": 401.16772313244553,
+            "median_ms": 403.48854700000004,
+            "p90_ms": 557.0785209999999,
+            "p95_ms": 600.4761949999997,
+            "p99_ms": 673.6144126400001,
+            "max_ms": 815.318594,
+            "failed_rate": 0
+          },
+          {
+            "vus": 40,
+            "requests": 1666,
+            "rps": 30.29090909090909,
+            "avg_ms": 947.4809204771924,
+            "median_ms": 1029.3946205,
+            "p90_ms": 1203.9329335,
+            "p95_ms": 1271.9617145,
+            "p99_ms": 1509.0899446999983,
+            "max_ms": 1852.159466,
+            "failed_rate": 0
+          }
+        ]
+      },
+      "serverMetrics": {
+        "rps": {
+          "samples": 12,
+          "min": 8.934524603280437,
+          "avg": 22.456638709473385,
+          "max": 31.797880141323912
+        },
+        "p95": {
+          "samples": 12,
+          "min": 0.19132605355294116,
+          "avg": 0.5830924565109384,
+          "max": 1.3774946156499999
+        },
+        "errorPct": {
+          "samples": 0,
+          "min": null,
+          "avg": null,
+          "max": null
+        },
+        "processCpu": {
+          "samples": 12,
+          "min": 0.014591636655533376,
+          "avg": 0.021649002636550636,
+          "max": 0.04200835473395859
+        },
+        "systemCpu": {
+          "samples": 12,
+          "min": 0.6778371375672207,
+          "avg": 0.8915212270139244,
+          "max": 1
+        },
+        "heapUsed": {
+          "samples": 12,
+          "min": 39509128,
+          "avg": 91867528.66666667,
+          "max": 172988472
+        },
+        "threads": {
+          "samples": 12,
+          "min": 25,
+          "avg": 33,
+          "max": 54
+        },
+        "hikariActive": {
+          "samples": 12,
+          "min": 1,
+          "avg": 6.666666666666667,
+          "max": 10
+        },
+        "hikariIdle": {
+          "samples": 12,
+          "min": 0,
+          "avg": 3.3333333333333335,
+          "max": 9
+        },
+        "hikariPending": {
+          "samples": 12,
+          "min": 0,
+          "avg": 4.333333333333333,
+          "max": 23
+        },
+        "hikariMax": {
+          "samples": 12,
+          "min": 10,
+          "avg": 10,
+          "max": 10
+        }
+      },
+      "serverPlateauSamplesByStage": {
+        "5": {
+          "active": {
+            "avg": 1.3333333333333333,
+            "max": 3,
+            "min": 0,
+            "samples": 3
+          },
+          "pending": {
+            "avg": 0,
+            "max": 0,
+            "min": 0,
+            "samples": 3
+          },
+          "idle": {
+            "avg": 8.666666666666666,
+            "max": 10,
+            "min": 7,
+            "samples": 3
+          },
+          "systemCpu": {
+            "avg": 0.6285626355103063,
+            "max": 0.736104587900288,
+            "min": 0.4874126175202841,
+            "samples": 3
+          },
+          "processCpu": {
+            "avg": 0.010031235280387123,
+            "max": 0.018763173373850136,
+            "min": 0.0007812651044586863,
+            "samples": 3
+          }
+        },
+        "10": {
+          "active": {
+            "avg": 6,
+            "max": 9,
+            "min": 3,
+            "samples": 3
+          },
+          "pending": {
+            "avg": 0,
+            "max": 0,
+            "min": 0,
+            "samples": 3
+          },
+          "idle": {
+            "avg": 4,
+            "max": 7,
+            "min": 1,
+            "samples": 3
+          },
+          "systemCpu": {
+            "avg": 0.8632353234674207,
+            "max": 0.9466606696942964,
+            "min": 0.6973798383220174,
+            "samples": 3
+          },
+          "processCpu": {
+            "avg": 0.02286729760667515,
+            "max": 0.026570098574665846,
+            "min": 0.015736246471060634,
+            "samples": 3
+          }
+        },
+        "20": {
+          "active": {
+            "avg": 9,
+            "max": 10,
+            "min": 7,
+            "samples": 3
+          },
+          "pending": {
+            "avg": 2,
+            "max": 3,
+            "min": 0,
+            "samples": 3
+          },
+          "idle": {
+            "avg": 1,
+            "max": 3,
+            "min": 0,
+            "samples": 3
+          },
+          "systemCpu": {
+            "avg": 0.9380529754980929,
+            "max": 1,
+            "min": 0.8490631882760517,
+            "samples": 3
+          },
+          "processCpu": {
+            "avg": 0.025592924117058644,
+            "max": 0.04200835473395859,
+            "min": 0.014976895901695491,
+            "samples": 3
+          }
+        },
+        "40": {
+          "active": {
+            "avg": 7,
+            "max": 10,
+            "min": 1,
+            "samples": 3
+          },
+          "pending": {
+            "avg": 15,
+            "max": 23,
+            "min": 0,
+            "samples": 3
+          },
+          "idle": {
+            "avg": 3,
+            "max": 9,
+            "min": 0,
+            "samples": 3
+          },
+          "systemCpu": {
+            "avg": 0.9601928729126369,
+            "max": 0.9997396615223909,
+            "min": 0.9285430138759995,
+            "samples": 3
+          },
+          "processCpu": {
+            "avg": 0.017492541897752772,
+            "max": 0.022035421246306953,
+            "min": 0.015100484061283694,
+            "samples": 3
+          }
+        }
+      }
+    },
+    "B": {
+      "name": "gwangju",
+      "query": "region=GWANGJU&page=0&size=20",
+      "totalElements": 40000,
+      "dbBaseline": "Page scanned 960,020 rows; COUNT scanned 1,000,000 rows.",
+      "smoke": {
+        "requests": 21,
+        "avg_ms": 313.6465249524,
+        "p95_ms": 357.554058,
+        "checksRate": 1,
+        "httpFailedRate": 0
+      },
+      "warmup": {
+        "requests": 154,
+        "avg_ms": 309.9335645844,
+        "p95_ms": 328.2222396,
+        "checksRate": 1,
+        "httpFailedRate": 0
+      },
+      "baseline": {
+        "total_requests": 2377,
+        "overall_rps": 10.760263867281173,
+        "iterations": 2376,
+        "iterations_per_second": 10.755737041926828,
+        "checks_rate": 1,
+        "http_failed_rate": 0,
+        "vus_max": 40,
+        "overall_duration": {
+          "p(90)": 3037.8851732000003,
+          "p(95)": 3295.2123601999992,
+          "p(99)": 3869.25763136,
+          "max": 4319.207444,
+          "avg": 1322.390483843498,
+          "med": 969.728067
+        },
+        "stages": [
+          {
+            "vus": 5,
+            "requests": 407,
+            "rps": 7.4,
+            "avg_ms": 378.27503541277616,
+            "median_ms": 373.129583,
+            "p90_ms": 429.11274460000004,
+            "p95_ms": 442.7122511,
+            "p99_ms": 785.3742711999992,
+            "max_ms": 914.735361,
+            "failed_rate": 0
+          },
+          {
+            "vus": 10,
+            "requests": 610,
+            "rps": 11.090909090909092,
+            "avg_ms": 579.8971085049179,
+            "median_ms": 557.8537914999999,
+            "p90_ms": 730.7849244000002,
+            "p95_ms": 836.7387657999996,
+            "p99_ms": 1017.8466067799992,
+            "max_ms": 1219.037467,
+            "failed_rate": 0
+          },
+          {
+            "vus": 20,
+            "requests": 693,
+            "rps": 12.6,
+            "avg_ms": 1185.614098823953,
+            "median_ms": 1221.944144,
+            "p90_ms": 1584.4022514000005,
+            "p95_ms": 1688.4938975999999,
+            "p99_ms": 1868.7436347200012,
+            "max_ms": 2356.952657,
+            "failed_rate": 0
+          },
+          {
+            "vus": 40,
+            "requests": 666,
+            "rps": 12.10909090909091,
+            "avg_ms": 2723.2937047747782,
+            "median_ms": 2887.2699145,
+            "p90_ms": 3516.5050675,
+            "p95_ms": 3741.49641275,
+            "p99_ms": 4085.8879429500003,
+            "max_ms": 4319.207444,
+            "failed_rate": 0
+          }
+        ]
+      },
+      "serverMetrics": {
+        "rps": {
+          "samples": 12,
+          "min": 5.8662755816278915,
+          "avg": 11.133920552697246,
+          "max": 13.667577838522568
+        },
+        "p95": {
+          "samples": 12,
+          "min": 0.44265309946398307,
+          "avg": 1.4657464909521467,
+          "max": 3.467788407133333
+        },
+        "errorPct": {
+          "samples": 0,
+          "min": null,
+          "avg": null,
+          "max": null
+        },
+        "processCpu": {
+          "samples": 12,
+          "min": 0.003250487109156853,
+          "avg": 0.005923006270467927,
+          "max": 0.009934048741782813
+        },
+        "systemCpu": {
+          "samples": 12,
+          "min": 0.6841378759862604,
+          "avg": 0.9173799820090184,
+          "max": 1
+        },
+        "heapUsed": {
+          "samples": 12,
+          "min": 42861512,
+          "avg": 74489739.33333333,
+          "max": 97387464
+        },
+        "threads": {
+          "samples": 12,
+          "min": 25,
+          "avg": 34,
+          "max": 56
+        },
+        "hikariActive": {
+          "samples": 12,
+          "min": 0,
+          "avg": 7.5,
+          "max": 10
+        },
+        "hikariIdle": {
+          "samples": 12,
+          "min": 0,
+          "avg": 2.5,
+          "max": 10
+        },
+        "hikariPending": {
+          "samples": 12,
+          "min": 0,
+          "avg": 6,
+          "max": 28
+        },
+        "hikariMax": {
+          "samples": 12,
+          "min": 10,
+          "avg": 10,
+          "max": 10
+        }
+      },
+      "serverPlateauSamplesByStage": {
+        "5": {
+          "active": {
+            "avg": 1.6666666666666667,
+            "max": 5,
+            "min": 0,
+            "samples": 3
+          },
+          "pending": {
+            "avg": 0,
+            "max": 0,
+            "min": 0,
+            "samples": 3
+          },
+          "idle": {
+            "avg": 8.333333333333334,
+            "max": 10,
+            "min": 5,
+            "samples": 3
+          },
+          "systemCpu": {
+            "avg": 0.6190430749817403,
+            "max": 0.7934683418705645,
+            "min": 0.4054482250983116,
+            "samples": 3
+          },
+          "processCpu": {
+            "avg": 0.002819493731963735,
+            "max": 0.004686896483962749,
+            "min": 0.0005210976027716029,
+            "samples": 3
+          }
+        },
+        "10": {
+          "active": {
+            "avg": 7.333333333333333,
+            "max": 9,
+            "min": 6,
+            "samples": 3
+          },
+          "pending": {
+            "avg": 0,
+            "max": 0,
+            "min": 0,
+            "samples": 3
+          },
+          "idle": {
+            "avg": 2.6666666666666665,
+            "max": 4,
+            "min": 1,
+            "samples": 3
+          },
+          "systemCpu": {
+            "avg": 0.8865617710802959,
+            "max": 0.9911370810488637,
+            "min": 0.6841378759862604,
+            "samples": 3
+          },
+          "processCpu": {
+            "avg": 0.006247096036677689,
+            "max": 0.009934048741782813,
+            "min": 0.003647726503388592,
+            "samples": 3
+          }
+        },
+        "20": {
+          "active": {
+            "avg": 7.666666666666667,
+            "max": 10,
+            "min": 3,
+            "samples": 3
+          },
+          "pending": {
+            "avg": 4.666666666666667,
+            "max": 8,
+            "min": 0,
+            "samples": 3
+          },
+          "idle": {
+            "avg": 2.3333333333333335,
+            "max": 7,
+            "min": 0,
+            "samples": 3
+          },
+          "systemCpu": {
+            "avg": 0.9465155565104965,
+            "max": 0.9992186404694884,
+            "min": 0.8520429267881946,
+            "samples": 3
+          },
+          "processCpu": {
+            "avg": 0.007345281921781017,
+            "max": 0.007936262606661039,
+            "min": 0.00641427880147196,
+            "samples": 3
+          }
+        },
+        "40": {
+          "active": {
+            "avg": 10,
+            "max": 10,
+            "min": 10,
+            "samples": 3
+          },
+          "pending": {
+            "avg": 17.666666666666668,
+            "max": 28,
+            "min": 0,
+            "samples": 3
+          },
+          "idle": {
+            "avg": 0,
+            "max": 0,
+            "min": 0,
+            "samples": 3
+          },
+          "systemCpu": {
+            "avg": 0.9817175493605069,
+            "max": 1,
+            "min": 0.9452821702717672,
+            "samples": 3
+          },
+          "processCpu": {
+            "avg": 0.005632062499968366,
+            "max": 0.0065141062999023065,
+            "min": 0.004164039241186263,
+            "samples": 3
+          }
+        }
+      }
+    },
+    "C": {
+      "name": "seoul_district_library",
+      "query": "region=SEOUL&district=SEOUL-DISTRICT-1&type=LIBRARY&page=0&size=20",
+      "totalElements": 5000,
+      "dbBaseline": "Page scanned 1,151 rows; COUNT scanned 1,000,000 rows.",
+      "smoke": {
+        "requests": 30,
+        "avg_ms": 154.9043077,
+        "p95_ms": 205.43389585,
+        "checksRate": 1,
+        "httpFailedRate": 0
+      },
+      "warmup": {
+        "requests": 235,
+        "avg_ms": 133.6498996468,
+        "p95_ms": 148.0668717,
+        "checksRate": 1,
+        "httpFailedRate": 0
+      },
+      "baseline": {
+        "total_requests": 4580,
+        "overall_rps": 20.803791575312655,
+        "iterations": 4579,
+        "iterations_per_second": 20.799249262741625,
+        "checks_rate": 1,
+        "http_failed_rate": 0,
+        "vus_max": 40,
+        "overall_duration": {
+          "p(90)": 1316.1801775000001,
+          "p(95)": 1460.5096359500005,
+          "p(99)": 1979.4970382000001,
+          "max": 3352.87388,
+          "avg": 579.0835144513113,
+          "med": 388.27049999999997
+        },
+        "stages": [
+          {
+            "vus": 5,
+            "requests": 632,
+            "rps": 11.49090909090909,
+            "avg_ms": 172.00517358544317,
+            "median_ms": 166.16927750000002,
+            "p90_ms": 202.61975839999997,
+            "p95_ms": 227.05203544999975,
+            "p99_ms": 298.8322490799995,
+            "max_ms": 325.023148,
+            "failed_rate": 0
+          },
+          {
+            "vus": 10,
+            "requests": 1052,
+            "rps": 19.12727272727273,
+            "avg_ms": 249.2276720541824,
+            "median_ms": 216.46399000000002,
+            "p90_ms": 400.87389149999996,
+            "p95_ms": 440.3338047,
+            "p99_ms": 549.9511330800001,
+            "max_ms": 685.968596,
+            "failed_rate": 0
+          },
+          {
+            "vus": 20,
+            "requests": 1549,
+            "rps": 28.163636363636364,
+            "avg_ms": 412.9280088250486,
+            "median_ms": 411.911569,
+            "p90_ms": 563.9940438,
+            "p95_ms": 605.543384,
+            "p99_ms": 674.0901054399998,
+            "max_ms": 830.535291,
+            "failed_rate": 0
+          },
+          {
+            "vus": 40,
+            "requests": 1346,
+            "rps": 24.472727272727273,
+            "avg_ms": 1219.5802291017817,
+            "median_ms": 1238.8358065,
+            "p90_ms": 1710.073649,
+            "p95_ms": 1928.6825925,
+            "p99_ms": 2118.0889771499997,
+            "max_ms": 3352.87388,
+            "failed_rate": 0
+          }
+        ]
+      },
+      "serverMetrics": {
+        "rps": {
+          "samples": 12,
+          "min": 11.53487131617549,
+          "avg": 21.502010337787826,
+          "max": 31.668777918527905
+        },
+        "p95": {
+          "samples": 12,
+          "min": 0.20878313033333337,
+          "avg": 0.6740063922525001,
+          "max": 2.092788347565493
+        },
+        "errorPct": {
+          "samples": 0,
+          "min": null,
+          "avg": null,
+          "max": null
+        },
+        "processCpu": {
+          "samples": 12,
+          "min": 0.005595320964382947,
+          "avg": 0.010158487738259092,
+          "max": 0.013958299607994258
+        },
+        "systemCpu": {
+          "samples": 12,
+          "min": 0.6500807767454719,
+          "avg": 0.8804215949882223,
+          "max": 1
+        },
+        "heapUsed": {
+          "samples": 12,
+          "min": 46686944,
+          "avg": 73473353.33333333,
+          "max": 113509432
+        },
+        "threads": {
+          "samples": 12,
+          "min": 55,
+          "avg": 55.583333333333336,
+          "max": 56
+        },
+        "hikariActive": {
+          "samples": 12,
+          "min": 0,
+          "avg": 7.083333333333333,
+          "max": 10
+        },
+        "hikariIdle": {
+          "samples": 12,
+          "min": 0,
+          "avg": 2.9166666666666665,
+          "max": 10
+        },
+        "hikariPending": {
+          "samples": 12,
+          "min": 0,
+          "avg": 6.416666666666667,
+          "max": 28
+        },
+        "hikariMax": {
+          "samples": 12,
+          "min": 10,
+          "avg": 10,
+          "max": 10
+        }
+      },
+      "serverPlateauSamplesByStage": {
+        "5": {
+          "active": {
+            "avg": 1,
+            "max": 3,
+            "min": 0,
+            "samples": 3
+          },
+          "pending": {
+            "avg": 0,
+            "max": 0,
+            "min": 0,
+            "samples": 3
+          },
+          "idle": {
+            "avg": 9,
+            "max": 10,
+            "min": 7,
+            "samples": 3
+          },
+          "systemCpu": {
+            "avg": 0.5655698494192308,
+            "max": 0.6500807767454719,
+            "min": 0.4004527967167048,
+            "samples": 3
+          },
+          "processCpu": {
+            "avg": 0.004688021747189064,
+            "max": 0.00638059065832558,
+            "min": 0.001693081748156495,
+            "samples": 3
+          }
+        },
+        "10": {
+          "active": {
+            "avg": 6,
+            "max": 10,
+            "min": 3,
+            "samples": 3
+          },
+          "pending": {
+            "avg": 0,
+            "max": 0,
+            "min": 0,
+            "samples": 3
+          },
+          "idle": {
+            "avg": 4,
+            "max": 7,
+            "min": 0,
+            "samples": 3
+          },
+          "systemCpu": {
+            "avg": 0.757127091798214,
+            "max": 0.9005340974429923,
+            "min": 0.666250355025301,
+            "samples": 3
+          },
+          "processCpu": {
+            "avg": 0.007287893955665562,
+            "max": 0.009507904014279462,
+            "min": 0.005595320964382947,
+            "samples": 3
+          }
+        },
+        "20": {
+          "active": {
+            "avg": 7,
+            "max": 10,
+            "min": 1,
+            "samples": 3
+          },
+          "pending": {
+            "avg": 3,
+            "max": 5,
+            "min": 0,
+            "samples": 3
+          },
+          "idle": {
+            "avg": 3,
+            "max": 9,
+            "min": 0,
+            "samples": 3
+          },
+          "systemCpu": {
+            "avg": 0.9382541889426972,
+            "max": 0.9993476728410965,
+            "min": 0.893211107711657,
+            "samples": 3
+          },
+          "processCpu": {
+            "avg": 0.011689611671769564,
+            "max": 0.013958299607994258,
+            "min": 0.00875125753115146,
+            "samples": 3
+          }
+        },
+        "40": {
+          "active": {
+            "avg": 10,
+            "max": 10,
+            "min": 10,
+            "samples": 3
+          },
+          "pending": {
+            "avg": 21.666666666666668,
+            "max": 28,
+            "min": 12,
+            "samples": 3
+          },
+          "idle": {
+            "avg": 0,
+            "max": 0,
+            "min": 0,
+            "samples": 3
+          },
+          "systemCpu": {
+            "avg": 0.9614959759493601,
+            "max": 1,
+            "min": 0.884751212914125,
+            "samples": 3
+          },
+          "processCpu": {
+            "avg": 0.011634457696854228,
+            "max": 0.012003618517732028,
+            "min": 0.011098722426908039,
+            "samples": 3
+          }
+        }
+      }
+    }
+  },
+  "prometheus": {
+    "endpointDiagnosticQueryWindow": "Each isolated run from start +45 seconds through completion; 15s query step; HTTP rate window 30s.",
+    "dashboardFiveMinuteAggregateAcrossAllRuns": {
+      "samples": 53,
+      "rps": {
+        "min": 2.4457084309,
+        "avg": 11.4110792045,
+        "max": 17.7902851709
+      },
+      "p95_seconds": {
+        "min": 0.3273421253,
+        "avg": 1.7329005303,
+        "max": 3.3329432681
+      },
+      "http4xxPercent": 0,
+      "http5xxPercent": 0
+    },
+    "caveat": "Spring HTTP labels do not include query parameters, so the normal 5m dashboard series combines A/B/C when their windows overlap."
+  }
+}
