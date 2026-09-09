@@ -1,0 +1,157 @@
+{
+  "schemaVersion": 1,
+  "title": "Reservation HTTP concurrency Before baseline without application locking",
+  "measuredAt": "2026-09-09 Asia/Seoul",
+  "sourceCommit": "a54d0839c8357fb01b9095ca703f01f826b6bcba",
+  "scriptSha256": "E74CE4E2935DD934CDE928811D431B22431C72A90AE859F29BCA5F3B15EB4C23",
+  "environment": {
+    "java": "21.0.12.1",
+    "springBoot": "4.1.1",
+    "mysql": "8.4.11",
+    "mysqlIsolation": "REPEATABLE-READ",
+    "facilityRows": 1000000,
+    "hikariMax": 10,
+    "prometheusScrapeIntervalSeconds": 15,
+    "k6Image": "grafana/k6:2.1.0",
+    "baseUrlFromK6": "http://host.docker.internal:8080"
+  },
+  "workload": {
+    "endpoint": "POST /api/programs/{programId}/reservations",
+    "executor": "per-vu-iterations",
+    "vus": 200,
+    "iterationsPerVu": 1,
+    "requests": 200,
+    "capacity": 100,
+    "participantIds": "k6-<run-id>-<vu-id-in-test>",
+    "participantIdsAreUnique": true,
+    "maxDurationSeconds": 60,
+    "fixture": "A new Program is inserted for each run and only that Program and its Reservations are deleted afterward"
+  },
+  "measurement": {
+    "deadlocks": "Delta of performance_schema.events_errors_summary_global_by_error for MySQL error 1213",
+    "hikariAndCpu": "Actuator metrics sampled approximately every 200 ms while the k6 process runs",
+    "prometheusNote": "The existing 15-second scrape interval is unchanged and may miss a 1.5-second request burst",
+    "httpMetrics": "k6 end-of-test summary"
+  },
+  "runs": [
+    {
+      "run": 1,
+      "programId": 21,
+      "startedUtc": "2026-09-09T07:37:51.7318245Z",
+      "requests": 200,
+      "status201": 39,
+      "status409": 0,
+      "status5xx": 161,
+      "unexpectedStatus": 0,
+      "deadlocks1213": 161,
+      "capacity": 100,
+      "reservedCount": 19,
+      "reservationRows": 39,
+      "rps": 115.0665080043738,
+      "durationMs": {
+        "avg": 873.1251493549998,
+        "median": 905.7970634999999,
+        "p90": 1431.3213282,
+        "p95": 1449.39951495,
+        "p99": 1471.31581077,
+        "max": 1481.586681
+      },
+      "httpFailedRate": 0.805,
+      "hikari": { "activeMax": 10, "idleMin": 0, "pendingMax": 98, "max": 10 },
+      "cpu": { "processMaxPercent": 39.68, "systemMaxPercent": 100.0 },
+      "invariants": {
+        "rowsWithinCapacity": true,
+        "reservedCountWithinCapacity": true,
+        "reservedCountEqualsRows": false,
+        "status201EqualsRows": true
+      }
+    },
+    {
+      "run": 2,
+      "programId": 22,
+      "startedUtc": "2026-09-09T07:38:50.2129823Z",
+      "requests": 200,
+      "status201": 41,
+      "status409": 0,
+      "status5xx": 159,
+      "unexpectedStatus": 0,
+      "deadlocks1213": 159,
+      "capacity": 100,
+      "reservedCount": 20,
+      "reservationRows": 41,
+      "rps": 135.66442337470585,
+      "durationMs": {
+        "avg": 759.5212197249996,
+        "median": 796.6352905,
+        "p90": 1105.3347950999998,
+        "p95": 1130.38213665,
+        "p99": 1162.3127928699998,
+        "max": 1188.218049
+      },
+      "httpFailedRate": 0.795,
+      "hikari": { "activeMax": 10, "idleMin": 0, "pendingMax": 73, "max": 10 },
+      "cpu": { "processMaxPercent": 33.59, "systemMaxPercent": 99.75 },
+      "invariants": {
+        "rowsWithinCapacity": true,
+        "reservedCountWithinCapacity": true,
+        "reservedCountEqualsRows": false,
+        "status201EqualsRows": true
+      }
+    },
+    {
+      "run": 3,
+      "programId": 23,
+      "startedUtc": "2026-09-09T07:39:08.2380943Z",
+      "requests": 200,
+      "status201": 36,
+      "status409": 0,
+      "status5xx": 164,
+      "unexpectedStatus": 0,
+      "deadlocks1213": 164,
+      "capacity": 100,
+      "reservedCount": 18,
+      "reservationRows": 36,
+      "rps": 127.32342694046639,
+      "durationMs": {
+        "avg": 835.838313255,
+        "median": 870.2448469999999,
+        "p90": 1065.8443604,
+        "p95": 1088.8612877,
+        "p99": 1114.1893054500001,
+        "max": 1119.45689
+      },
+      "httpFailedRate": 0.82,
+      "hikari": { "activeMax": 10, "idleMin": 0, "pendingMax": 172, "max": 10 },
+      "cpu": { "processMaxPercent": 24.43, "systemMaxPercent": 100.0 },
+      "invariants": {
+        "rowsWithinCapacity": true,
+        "reservedCountWithinCapacity": true,
+        "reservedCountEqualsRows": false,
+        "status201EqualsRows": true
+      }
+    }
+  ],
+  "conclusion": {
+    "overbookingObserved": false,
+    "lostUpdateObservedEveryRun": true,
+    "deadlock5xxMatchesEveryRun": true,
+    "applicationConcurrencySolutionApplied": false
+  },
+  "verification": {
+    "buildCommand": ".\\gradlew.bat build --rerun-tasks",
+    "testProcessDdlAuto": "validate",
+    "buildSuccessful": true,
+    "tests": 30,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "fixtureProgramRowsAfterTests": 0,
+    "fixtureReservationRowsAfterTests": 0,
+    "facilityRows": 1000000,
+    "distinctFacilityNames": 1000000,
+    "facilityChecksum": "2148598155341640",
+    "redis": "PONG",
+    "applicationHealth": "UP",
+    "prometheusTarget": "UP"
+  }
+}
