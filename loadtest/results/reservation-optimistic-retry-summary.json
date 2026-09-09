@@ -1,0 +1,387 @@
+﻿{
+    "schemaVersion":  1,
+    "strategy":  "Optimistic @Version + bounded retry",
+    "date":  "2026-09-09 Asia/Seoul",
+    "sourceCommit":  "454f002523c602546de793bca59483185dec4775",
+    "scriptSha256":  "640FE0639866B2B49A86528FBEFA00AB1C28E3D1769D569C3AB01D6D4EE1201A",
+    "policy":  {
+                   "secondBackoffMilliseconds":  "uniform integer 20..60",
+                   "firstBackoffMilliseconds":  "uniform integer 10..30",
+                   "maxRetries":  2,
+                   "retryable":  [
+                                     "Spring OptimisticLockingFailureException family",
+                                     "SQLException code=1213 AND SQLState=40001"
+                                 ],
+                   "transaction":  "TransactionTemplate REQUIRES_NEW per attempt; sleep after rollback",
+                   "maxAttempts":  3,
+                   "capacityFull":  "409; no retry",
+                   "finalFailure":  "propagate original exception; HTTP 500"
+               },
+    "environment":  {
+                        "prometheusScrapeSeconds":  15,
+                        "java":  "21.0.12.1",
+                        "springBoot":  "4.1.1",
+                        "isolation":  "REPEATABLE-READ",
+                        "k6":  "grafana/k6:2.1.0",
+                        "mysql":  "8.4.11",
+                        "hikariMax":  10
+                    },
+    "workload":  {
+                     "vus":  200,
+                     "uniqueParticipants":  true,
+                     "scriptUnchanged":  true,
+                     "capacity":  100,
+                     "repetitions":  3,
+                     "iterationsPerVu":  1,
+                     "warmup":  "separate capacity=1 fixture, sequential 201 then 409"
+                 },
+    "serviceResults":  [
+                           "OPTIMISTIC_RETRY run=1 capacity=100 requests=200 successes=56 conflicts=0 unexpectedFailures=144 reservedCount=56 reservationRows=56 exceptions={CannotAcquireLockException(errorCode=1213,sqlState=40001)=125, ObjectOptimisticLockingFailureException -\u003e StaleObjectStateException -\u003e StaleStateException=19}",
+                           "RETRY_METRICS run=1 counters={MeterId{name=\u0027reservation.attempts\u0027, tags=[tag(application=public-service),tag(attempt=1),tag(outcome=deadlock)]}=156.0, MeterId{name=\u0027reservation.attempts\u0027, tags=[tag(application=public-service),tag(attempt=1),tag(outcome=optimistic)]}=23.0, MeterId{name=\u0027reservation.attempts\u0027, tags=[tag(application=public-service),tag(attempt=1),tag(outcome=success)]}=21.0, MeterId{name=\u0027reservation.attempts\u0027, tags=[tag(application=public-service),tag(attempt=2),tag(outcome=deadlock)]}=139.0, MeterId{name=\u0027reservation.attempts\u0027, tags=[tag(application=public-service),tag(attempt=2),tag(outcome=optimistic)]}=21.0, MeterId{name=\u0027reservation.attempts\u0027, tags=[tag(application=public-service),tag(attempt=2),tag(outcome=success)]}=19.0, MeterId{name=\u0027reservation.attempts\u0027, tags=[tag(application=public-service),tag(attempt=3),tag(outcome=deadlock)]}=125.0, MeterId{name=\u0027reservation.attempts\u0027, tags=[tag(application=public-service),tag(attempt=3),tag(outcome=optimistic)]}=19.0, MeterId{name=\u0027reservation.attempts\u0027, tags=[tag(application=public-service),tag(attempt=3),tag(outcome=success)]}=16.0, MeterId{name=\u0027reservation.retries\u0027, tags=[tag(application=public-service),tag(reason=deadlock)]}=295.0, MeterId{name=\u0027reservation.retries\u0027, tags=[tag(application=public-service),tag(reason=optimistic)]}=44.0}",
+                           "OPTIMISTIC_RETRY run=2 capacity=100 requests=200 successes=55 conflicts=0 unexpectedFailures=145 reservedCount=55 reservationRows=55 exceptions={CannotAcquireLockException(errorCode=1213,sqlState=40001)=128, ObjectOptimisticLockingFailureException -\u003e StaleObjectStateException -\u003e StaleStateException=17}",
+                           "RETRY_METRICS run=2 counters={MeterId{name=\u0027reservation.attempts\u0027, tags=[tag(application=public-service),tag(attempt=1),tag(outcome=deadlock)]}=163.0, MeterId{name=\u0027reservation.attempts\u0027, tags=[tag(application=public-service),tag(attempt=1),tag(outcome=optimistic)]}=19.0, MeterId{name=\u0027reservation.attempts\u0027, tags=[tag(application=public-service),tag(attempt=1),tag(outcome=success)]}=18.0, MeterId{name=\u0027reservation.attempts\u0027, tags=[tag(application=public-service),tag(attempt=2),tag(outcome=deadlock)]}=143.0, MeterId{name=\u0027reservation.attempts\u0027, tags=[tag(application=public-service),tag(attempt=2),tag(outcome=optimistic)]}=19.0, MeterId{name=\u0027reservation.attempts\u0027, tags=[tag(application=public-service),tag(attempt=2),tag(outcome=success)]}=20.0, MeterId{name=\u0027reservation.attempts\u0027, tags=[tag(application=public-service),tag(attempt=3),tag(outcome=deadlock)]}=128.0, MeterId{name=\u0027reservation.attempts\u0027, tags=[tag(application=public-service),tag(attempt=3),tag(outcome=optimistic)]}=17.0, MeterId{name=\u0027reservation.attempts\u0027, tags=[tag(application=public-service),tag(attempt=3),tag(outcome=success)]}=17.0, MeterId{name=\u0027reservation.retries\u0027, tags=[tag(application=public-service),tag(reason=deadlock)]}=306.0, MeterId{name=\u0027reservation.retries\u0027, tags=[tag(application=public-service),tag(reason=optimistic)]}=38.0}",
+                           "OPTIMISTIC_RETRY run=3 capacity=100 requests=200 successes=55 conflicts=0 unexpectedFailures=145 reservedCount=55 reservationRows=55 exceptions={CannotAcquireLockException(errorCode=1213,sqlState=40001)=126, ObjectOptimisticLockingFailureException -\u003e StaleObjectStateException -\u003e StaleStateException=19}",
+                           "RETRY_METRICS run=3 counters={MeterId{name=\u0027reservation.attempts\u0027, tags=[tag(application=public-service),tag(attempt=1),tag(outcome=deadlock)]}=160.0, MeterId{name=\u0027reservation.attempts\u0027, tags=[tag(application=public-service),tag(attempt=1),tag(outcome=optimistic)]}=20.0, MeterId{name=\u0027reservation.attempts\u0027, tags=[tag(application=public-service),tag(attempt=1),tag(outcome=success)]}=20.0, MeterId{name=\u0027reservation.attempts\u0027, tags=[tag(application=public-service),tag(attempt=2),tag(outcome=deadlock)]}=142.0, MeterId{name=\u0027reservation.attempts\u0027, tags=[tag(application=public-service),tag(attempt=2),tag(outcome=optimistic)]}=19.0, MeterId{name=\u0027reservation.attempts\u0027, tags=[tag(application=public-service),tag(attempt=2),tag(outcome=success)]}=19.0, MeterId{name=\u0027reservation.attempts\u0027, tags=[tag(application=public-service),tag(attempt=3),tag(outcome=deadlock)]}=126.0, MeterId{name=\u0027reservation.attempts\u0027, tags=[tag(application=public-service),tag(attempt=3),tag(outcome=optimistic)]}=19.0, MeterId{name=\u0027reservation.attempts\u0027, tags=[tag(application=public-service),tag(attempt=3),tag(outcome=success)]}=16.0, MeterId{name=\u0027reservation.retries\u0027, tags=[tag(application=public-service),tag(reason=deadlock)]}=302.0, MeterId{name=\u0027reservation.retries\u0027, tags=[tag(application=public-service),tag(reason=optimistic)]}=39.0}"
+                       ],
+    "httpRuns":  [
+                     {
+                         "run":  1,
+                         "programId":  83,
+                         "startUtc":  "2026-09-09T11:18:00.5040949+00:00",
+                         "endUtc":  "2026-09-09T11:18:04.5494618+00:00",
+                         "requests":  200,
+                         "status201":  88,
+                         "status409":  0,
+                         "status5xx":  112,
+                         "finalOptimisticFailures":  26,
+                         "finalDeadlockFailures":  86,
+                         "allOptimisticConflicts":  97,
+                         "allDeadlocks1213":  309,
+                         "retries":  294,
+                         "retriesByReason":  {
+                                                 "deadlock":  223,
+                                                 "optimistic":  71
+                                             },
+                         "totalAttempts":  494,
+                         "attemptOutcomes":  [
+                                                 {
+                                                     "attempt":  1,
+                                                     "outcome":  "business_rejection",
+                                                     "count":  0
+                                                 },
+                                                 {
+                                                     "attempt":  1,
+                                                     "outcome":  "deadlock",
+                                                     "count":  115
+                                                 },
+                                                 {
+                                                     "attempt":  1,
+                                                     "outcome":  "optimistic",
+                                                     "count":  40
+                                                 },
+                                                 {
+                                                     "attempt":  1,
+                                                     "outcome":  "success",
+                                                     "count":  45
+                                                 },
+                                                 {
+                                                     "attempt":  2,
+                                                     "outcome":  "deadlock",
+                                                     "count":  108
+                                                 },
+                                                 {
+                                                     "attempt":  2,
+                                                     "outcome":  "optimistic",
+                                                     "count":  31
+                                                 },
+                                                 {
+                                                     "attempt":  2,
+                                                     "outcome":  "success",
+                                                     "count":  16
+                                                 },
+                                                 {
+                                                     "attempt":  3,
+                                                     "outcome":  "deadlock",
+                                                     "count":  86
+                                                 },
+                                                 {
+                                                     "attempt":  3,
+                                                     "outcome":  "optimistic",
+                                                     "count":  26
+                                                 },
+                                                 {
+                                                     "attempt":  3,
+                                                     "outcome":  "success",
+                                                     "count":  27
+                                                 }
+                                             ],
+                         "reservedCount":  88,
+                         "reservationRows":  88,
+                         "capacity":  100,
+                         "allSafetyInvariantsHold":  true,
+                         "rps":  63.98054352695034,
+                         "success201Rps":  28.15143915185815,
+                         "durationMs":  {
+                                            "p(95)":  2860.87982995,
+                                            "p(99)":  2943.01482864,
+                                            "max":  2952.953474,
+                                            "avg":  1626.0721682949995,
+                                            "med":  1547.2514795,
+                                            "p(90)":  2737.2535740999997
+                                        },
+                         "testRunDurationMs":  3125.950312,
+                         "errorRate":  0.56,
+                         "hikari":  {
+                                        "activeMax":  10,
+                                        "idleMin":  0,
+                                        "pendingMax":  166,
+                                        "max":  10
+                                    },
+                         "cpu":  {
+                                     "processMaxPercent":  42.612900322630793,
+                                     "systemMaxPercent":  99.720498103262443
+                                 },
+                         "rowLockWaits":  726,
+                         "rowLockTimeMs":  3362
+                     },
+                     {
+                         "run":  2,
+                         "programId":  84,
+                         "startUtc":  "2026-09-09T11:18:18.4990842+00:00",
+                         "endUtc":  "2026-09-09T11:18:21.8323463+00:00",
+                         "requests":  200,
+                         "status201":  99,
+                         "status409":  0,
+                         "status5xx":  101,
+                         "finalOptimisticFailures":  22,
+                         "finalDeadlockFailures":  79,
+                         "allOptimisticConflicts":  94,
+                         "allDeadlocks1213":  288,
+                         "retries":  281,
+                         "retriesByReason":  {
+                                                 "deadlock":  209,
+                                                 "optimistic":  72
+                                             },
+                         "totalAttempts":  481,
+                         "attemptOutcomes":  [
+                                                 {
+                                                     "attempt":  1,
+                                                     "outcome":  "business_rejection",
+                                                     "count":  0
+                                                 },
+                                                 {
+                                                     "attempt":  1,
+                                                     "outcome":  "deadlock",
+                                                     "count":  116
+                                                 },
+                                                 {
+                                                     "attempt":  1,
+                                                     "outcome":  "optimistic",
+                                                     "count":  37
+                                                 },
+                                                 {
+                                                     "attempt":  1,
+                                                     "outcome":  "success",
+                                                     "count":  47
+                                                 },
+                                                 {
+                                                     "attempt":  2,
+                                                     "outcome":  "deadlock",
+                                                     "count":  93
+                                                 },
+                                                 {
+                                                     "attempt":  2,
+                                                     "outcome":  "optimistic",
+                                                     "count":  35
+                                                 },
+                                                 {
+                                                     "attempt":  2,
+                                                     "outcome":  "success",
+                                                     "count":  25
+                                                 },
+                                                 {
+                                                     "attempt":  3,
+                                                     "outcome":  "deadlock",
+                                                     "count":  79
+                                                 },
+                                                 {
+                                                     "attempt":  3,
+                                                     "outcome":  "optimistic",
+                                                     "count":  22
+                                                 },
+                                                 {
+                                                     "attempt":  3,
+                                                     "outcome":  "success",
+                                                     "count":  27
+                                                 }
+                                             ],
+                         "reservedCount":  99,
+                         "reservationRows":  99,
+                         "capacity":  100,
+                         "allSafetyInvariantsHold":  true,
+                         "rps":  83.31447826018643,
+                         "success201Rps":  41.240666738792285,
+                         "durationMs":  {
+                                            "avg":  1184.8128507700003,
+                                            "med":  1148.219297,
+                                            "p(90)":  1933.4507188,
+                                            "p(95)":  2051.9284800499995,
+                                            "p(99)":  2111.1741998699995,
+                                            "max":  2146.670308
+                                        },
+                         "testRunDurationMs":  2400.543149,
+                         "errorRate":  0.505,
+                         "hikari":  {
+                                        "activeMax":  10,
+                                        "idleMin":  0,
+                                        "pendingMax":  146,
+                                        "max":  10
+                                    },
+                         "cpu":  {
+                                     "processMaxPercent":  43.150995145784279,
+                                     "systemMaxPercent":  98.164431028754777
+                                 },
+                         "rowLockWaits":  700,
+                         "rowLockTimeMs":  1845
+                     },
+                     {
+                         "run":  3,
+                         "programId":  85,
+                         "startUtc":  "2026-09-09T11:18:47.6356756+00:00",
+                         "endUtc":  "2026-09-09T11:18:50.6724738+00:00",
+                         "requests":  200,
+                         "status201":  100,
+                         "status409":  17,
+                         "status5xx":  83,
+                         "finalOptimisticFailures":  19,
+                         "finalDeadlockFailures":  64,
+                         "allOptimisticConflicts":  100,
+                         "allDeadlocks1213":  256,
+                         "retries":  273,
+                         "retriesByReason":  {
+                                                 "deadlock":  192,
+                                                 "optimistic":  81
+                                             },
+                         "totalAttempts":  473,
+                         "attemptOutcomes":  [
+                                                 {
+                                                     "attempt":  1,
+                                                     "outcome":  "business_rejection",
+                                                     "count":  8
+                                                 },
+                                                 {
+                                                     "attempt":  1,
+                                                     "outcome":  "deadlock",
+                                                     "count":  109
+                                                 },
+                                                 {
+                                                     "attempt":  1,
+                                                     "outcome":  "optimistic",
+                                                     "count":  45
+                                                 },
+                                                 {
+                                                     "attempt":  1,
+                                                     "outcome":  "success",
+                                                     "count":  38
+                                                 },
+                                                 {
+                                                     "attempt":  2,
+                                                     "outcome":  "business_rejection",
+                                                     "count":  4
+                                                 },
+                                                 {
+                                                     "attempt":  2,
+                                                     "outcome":  "deadlock",
+                                                     "count":  83
+                                                 },
+                                                 {
+                                                     "attempt":  2,
+                                                     "outcome":  "optimistic",
+                                                     "count":  36
+                                                 },
+                                                 {
+                                                     "attempt":  2,
+                                                     "outcome":  "success",
+                                                     "count":  31
+                                                 },
+                                                 {
+                                                     "attempt":  3,
+                                                     "outcome":  "business_rejection",
+                                                     "count":  5
+                                                 },
+                                                 {
+                                                     "attempt":  3,
+                                                     "outcome":  "deadlock",
+                                                     "count":  64
+                                                 },
+                                                 {
+                                                     "attempt":  3,
+                                                     "outcome":  "optimistic",
+                                                     "count":  19
+                                                 },
+                                                 {
+                                                     "attempt":  3,
+                                                     "outcome":  "success",
+                                                     "count":  31
+                                                 }
+                                             ],
+                         "reservedCount":  100,
+                         "reservationRows":  100,
+                         "capacity":  100,
+                         "allSafetyInvariantsHold":  true,
+                         "rps":  96.39894533866263,
+                         "success201Rps":  48.199472669331314,
+                         "durationMs":  {
+                                            "p(99)":  1842.94263265,
+                                            "max":  1860.393566,
+                                            "avg":  1056.0514571550011,
+                                            "med":  1015.6908565,
+                                            "p(90)":  1768.4199265,
+                                            "p(95)":  1820.17762575
+                                        },
+                         "testRunDurationMs":  2074.711495,
+                         "errorRate":  0.415,
+                         "hikari":  {
+                                        "activeMax":  10,
+                                        "idleMin":  0,
+                                        "pendingMax":  146,
+                                        "max":  10
+                                    },
+                         "cpu":  {
+                                     "processMaxPercent":  24.738004376757679,
+                                     "systemMaxPercent":  100
+                                 },
+                         "rowLockWaits":  632,
+                         "rowLockTimeMs":  1542
+                     }
+                 ],
+    "average":  {
+                    "p95Ms":  2244.3286452499997,
+                    "p99Ms":  2299.043887053333,
+                    "avgMs":  1288.9788254066671,
+                    "rps":  81.231322375266473,
+                    "success201Rps":  39.197192853327252
+                },
+    "verification":  {
+                         "failures":  0,
+                         "errors":  0,
+                         "fixtureRowsAfterCleanup":  0,
+                         "application":  "UP",
+                         "facilityDistinctNames":  1000000,
+                         "skipped":  0,
+                         "build":  "gradlew.bat build --console=plain; ddl-auto=validate; successful in 41s",
+                         "tests":  34,
+                         "facilityRows":  1000000,
+                         "redis":  "PONG; Facility A 20 content/50000 total; cache hit delta=1",
+                         "facilityChecksumSum":  2148598155341640,
+                         "prometheus":  "UP",
+                         "schemaUnchanged":  true,
+                         "indexes":  [
+                                         "PRIMARY(id)",
+                                         "idx_facility_region(region)",
+                                         "idx_facility_region_type(region,type)",
+                                         "idx_facility_region_district_type(region,district,type)"
+                                     ]
+                     },
+    "observation":  "Before/after Prometheus counters for exact attempt/retry counts; 1213 corroborated against MySQL Performance Schema global error delta; final failures counted from one servlet ERROR header per request. Same sequential Actuator polling plus 200ms sleep as baseline; sampled gauge peaks and CPU are approximate."
+}

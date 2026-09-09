@@ -1,6 +1,7 @@
 package me.chung.publicservice.service;
 
 import java.sql.SQLException;
+import io.micrometer.core.instrument.MeterRegistry;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -52,8 +53,11 @@ class ReservationConcurrencyBaselineTests {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
+    @Autowired
+    private MeterRegistry metrics;
+
     @RepeatedTest(3)
-    void optimisticLockWithoutRetryPreservesCommittedCountInvariants(RepetitionInfo repetitionInfo)
+    void boundedRetryPreservesCommittedCountInvariants(RepetitionInfo repetitionInfo)
             throws Exception {
         Facility facility = facilityRepository.findAll(
                 PageRequest.of(0, 1, Sort.by("id"))).getContent().getFirst();
@@ -65,6 +69,7 @@ class ReservationConcurrencyBaselineTests {
         AtomicInteger successes = new AtomicInteger();
         AtomicInteger conflicts = new AtomicInteger();
         Map<String, AtomicInteger> exceptions = new ConcurrentHashMap<>();
+        Map<String, Double> before = retryMetrics();
 
         try {
             List<Future<?>> futures = new ArrayList<>();
@@ -105,12 +110,16 @@ class ReservationConcurrencyBaselineTests {
                     .sum();
 
             System.out.printf(
-                    "OPTIMISTIC_NO_RETRY run=%d capacity=%d requests=%d successes=%d conflicts=%d "
+                    "OPTIMISTIC_RETRY run=%d capacity=%d requests=%d successes=%d conflicts=%d "
                             + "unexpectedFailures=%d reservedCount=%d reservationRows=%d "
                             + "exceptions=%s%n",
                     repetitionInfo.getCurrentRepetition(), CAPACITY, REQUESTS, successes.get(),
                     conflicts.get(), unexpectedFailures, result.getReservedCount(),
                     reservationRows, exceptionCounts(exceptions));
+            Map<String, Double> delta = retryMetrics();
+            delta.replaceAll((key, value) -> value - before.getOrDefault(key, 0.0));
+            System.out.println("RETRY_METRICS run=" + repetitionInfo.getCurrentRepetition()
+                    + " counters=" + delta);
 
             assertThat(successes.get()).isBetween(1, CAPACITY);
             assertThat(successes.get() + conflicts.get() + unexpectedFailures)
@@ -126,6 +135,15 @@ class ReservationConcurrencyBaselineTests {
             jdbcTemplate.update("DELETE FROM reservation WHERE program_id = ?", program.getId());
             jdbcTemplate.update("DELETE FROM program WHERE id = ?", program.getId());
         }
+    }
+
+    private Map<String, Double> retryMetrics() {
+        Map<String, Double> result = new java.util.TreeMap<>();
+        metrics.getMeters().stream()
+                .filter(meter -> meter.getId().getName().startsWith("reservation."))
+                .forEach(meter -> meter.measure().forEach(measurement ->
+                        result.put(meter.getId().toString(), measurement.getValue())));
+        return result;
     }
 
     private String exceptionName(Exception exception) {
