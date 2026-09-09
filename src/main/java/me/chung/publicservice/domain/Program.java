@@ -8,7 +8,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Version;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -30,10 +29,6 @@ public class Program {
     private String name;
     private int capacity;
     private int reservedCount;
-
-    @Version
-    @Column(nullable = false)
-    private long version;
 
     public Program(Facility facility, String name, int capacity) {
         if (capacity <= 0) {
