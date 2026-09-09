@@ -1,0 +1,164 @@
+{
+  "schemaVersion": 1,
+  "title": "Facility Redis cache After: repeated hot reads served from Redis",
+  "measuredAt": "2026-09-09 Asia/Seoul",
+  "sourceCommit": "462c76aa722787553e299e4d9ff3ac883af9d79e",
+  "scriptSha256": "6E3CC412C9AFC7442AD29FB001F9358712AF733F96F91BA41929FB96A290385D",
+  "environment": {
+    "facilityRows": 1000000,
+    "mysql": "8.4.11",
+    "java": "21.0.12.1",
+    "springBoot": "4.1.1",
+    "hikariMax": 10,
+    "prometheusScrapeIntervalSeconds": 15,
+    "k6Image": "grafana/k6:2.1.0",
+    "redisImage": "redis:7.4-alpine",
+    "cacheTtlSeconds": 300,
+    "indexes": [
+      "PRIMARY(id)",
+      "idx_facility_region(region)",
+      "idx_facility_region_type(region,type)",
+      "idx_facility_region_district_type(region,district,type)"
+    ]
+  },
+  "design": {
+    "scriptChangedFromBefore": false,
+    "oneIdenticalUrlPerRun": true,
+    "smoke": { "vus": 1, "durationSeconds": 10 },
+    "warmup": {
+      "startVus": 1,
+      "targetVus": 3,
+      "rampUpSeconds": 5,
+      "holdSeconds": 20,
+      "rampDownSeconds": 5
+    },
+    "baselineStages": [
+      { "vus": 5, "rampUpSeconds": 10, "holdSeconds": 40, "rampDownSeconds": 5 },
+      { "vus": 10, "rampUpSeconds": 10, "holdSeconds": 40, "rampDownSeconds": 5 },
+      { "vus": 20, "rampUpSeconds": 10, "holdSeconds": 40, "rampDownSeconds": 5 },
+      { "vus": 40, "rampUpSeconds": 10, "holdSeconds": 40, "rampDownSeconds": 5 }
+    ],
+    "thinkTimeSeconds": 0.2,
+    "cacheStateControl": "FLUSHDB, one untimed prewarm request, then Redis CONFIG RESETSTAT immediately before each timed baseline",
+    "note": "Stage RPS is requests divided by the 55-second ramp, hold, and ramp-down stage. The timed baseline measures warm cache hits."
+  },
+  "endpoints": {
+    "A": {
+      "query": "region=SEOUL&type=LIBRARY&page=0&size=20",
+      "totalElements": 50000,
+      "baseline": {
+        "totalRequests": 17248,
+        "overallRps": 78.3659,
+        "checksRate": 1.0,
+        "failedRate": 0.0,
+        "stages": [
+          { "vus": 5, "requests": 1138, "rps": 20.6909, "avgMs": 5.8909, "p95Ms": 10.0973, "p99Ms": 25.6342 },
+          { "vus": 10, "requests": 2286, "rps": 41.5636, "avgMs": 6.2176, "p95Ms": 15.7717, "p99Ms": 40.6229 },
+          { "vus": 20, "requests": 4612, "rps": 83.8545, "avgMs": 4.9838, "p95Ms": 10.4825, "p99Ms": 25.7824 },
+          { "vus": 40, "requests": 9211, "rps": 167.4727, "avgMs": 5.5892, "p95Ms": 14.0113, "p99Ms": 49.7960 }
+        ]
+      },
+      "cacheDuringBaseline": {
+        "redisHits": 17248,
+        "redisMisses": 0,
+        "hitRatio": 1.0,
+        "entries": 1,
+        "entryBytes": 4264,
+        "ttlSecondsAtEnd": 76
+      },
+      "databaseDuringBaseline": {
+        "pageStatementDelta": 0,
+        "countStatementDelta": 0,
+        "pageRowsExaminedDelta": 0,
+        "countRowsExaminedDelta": 0
+      },
+      "server40Vu": {
+        "httpP95AvgMs": 5.9960,
+        "httpP95MaxMs": 9.7941,
+        "processCpuAvgPercent": 2.7911,
+        "systemCpuAvgPercent": 58.9315,
+        "heapMinBytes": 51992952,
+        "heapMaxBytes": 58805984,
+        "hikariActiveAvg": 0,
+        "hikariActiveMax": 0,
+        "hikariIdleAvg": 10,
+        "hikariIdleMin": 10,
+        "hikariPendingAvg": 0,
+        "hikariPendingMax": 0,
+        "hikariMax": 10
+      }
+    },
+    "B": {
+      "query": "region=GWANGJU&page=0&size=20",
+      "totalElements": 40000,
+      "baseline": {
+        "totalRequests": 17405,
+        "overallRps": 79.0384,
+        "checksRate": 1.0,
+        "failedRate": 0.0,
+        "stages": [
+          { "vus": 5, "requests": 1146, "rps": 20.8364, "avgMs": 4.6774, "p95Ms": 6.2882, "p99Ms": 12.1597 },
+          { "vus": 10, "requests": 2312, "rps": 42.0364, "avgMs": 3.8943, "p95Ms": 4.8875, "p99Ms": 5.7587 },
+          { "vus": 20, "requests": 4637, "rps": 84.3091, "avgMs": 4.0481, "p95Ms": 5.3249, "p99Ms": 8.4744 },
+          { "vus": 40, "requests": 9309, "rps": 169.2545, "avgMs": 3.4940, "p95Ms": 5.2643, "p99Ms": 7.4253 }
+        ]
+      },
+      "cacheDuringBaseline": {
+        "redisHits": 17405,
+        "redisMisses": 0,
+        "hitRatio": 1.0,
+        "entries": 1,
+        "entryBytes": 4248,
+        "ttlSecondsAtEnd": 77
+      },
+      "databaseDuringBaseline": {
+        "pageStatementDelta": 0,
+        "countStatementDelta": 0,
+        "pageRowsExaminedDelta": 0,
+        "countRowsExaminedDelta": 0
+      },
+      "server40Vu": {
+        "httpP95AvgMs": 2.4039,
+        "httpP95MaxMs": 2.6305,
+        "processCpuAvgPercent": 2.2963,
+        "systemCpuAvgPercent": 43.6888,
+        "heapMinBytes": 51559056,
+        "heapMaxBytes": 89785376,
+        "hikariActiveAvg": 0,
+        "hikariActiveMax": 0,
+        "hikariIdleAvg": 10,
+        "hikariIdleMin": 10,
+        "hikariPendingAvg": 0,
+        "hikariPendingMax": 0,
+        "hikariMax": 10
+      }
+    }
+  },
+  "firstMissVerification": {
+    "A": { "pageStatements": 1, "pageRowsExamined": 20, "countStatements": 1, "countRowsExamined": 50000 },
+    "B": { "pageStatements": 1, "pageRowsExamined": 20, "countStatements": 1, "countRowsExamined": 40000 },
+    "secondIdenticalRequestDatabaseDelta": 0,
+    "separateKeysVerified": true
+  },
+  "before40Vu": {
+    "A": { "rps": 148.2364, "avgMs": 31.8346, "p95Ms": 62.1351, "p99Ms": 103.6443, "failedRate": 0 },
+    "B": { "rps": 155.9636, "avgMs": 20.5907, "p95Ms": 44.5645, "p99Ms": 72.6241, "failedRate": 0 }
+  },
+  "verification": {
+    "buildCommand": ".\\gradlew.bat build --rerun-tasks",
+    "buildSuccessful": true,
+    "tests": 23,
+    "testFailures": 0,
+    "testErrors": 0,
+    "testSkipped": 0,
+    "testProcessDdlAuto": "validate",
+    "facilityRows": 1000000,
+    "distinctNames": 1000000,
+    "dataChecksum": "2148598155341640",
+    "districtsPerRegion": 10,
+    "applicationHealth": "UP",
+    "prometheusTarget": "UP",
+    "redisHealth": "PONG",
+    "dockerServices": ["mysql", "redis", "prometheus", "grafana"]
+  }
+}

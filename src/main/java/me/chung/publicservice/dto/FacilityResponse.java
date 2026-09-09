@@ -1,5 +1,6 @@
 package me.chung.publicservice.dto;
 
+import java.io.Serializable;
 import me.chung.publicservice.domain.Facility;
 import me.chung.publicservice.domain.FacilityType;
 import me.chung.publicservice.domain.OperatingStatus;
@@ -14,7 +15,7 @@ public record FacilityResponse(
         Double latitude,
         Double longitude,
         OperatingStatus operatingStatus
-) {
+) implements Serializable {
     public static FacilityResponse from(Facility facility) {
         return new FacilityResponse(
                 facility.getId(),

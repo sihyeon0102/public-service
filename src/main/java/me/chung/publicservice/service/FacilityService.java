@@ -9,6 +9,7 @@ import me.chung.publicservice.domain.FacilityType;
 import me.chung.publicservice.dto.FacilityPageResponse;
 import me.chung.publicservice.dto.FacilityResponse;
 import me.chung.publicservice.repository.FacilityRepository;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
@@ -30,6 +31,7 @@ public class FacilityService {
         return FacilityResponse.from(facility);
     }
 
+    @Cacheable(cacheNames = "facilitySearch", keyGenerator = "facilitySearchKeyGenerator")
     public FacilityPageResponse getFacilities(String region, String district,
                                               FacilityType type, Pageable pageable) {
         Specification<Facility> specification = (root, query, criteriaBuilder) -> {
