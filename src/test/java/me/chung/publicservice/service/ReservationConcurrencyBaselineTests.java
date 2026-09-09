@@ -53,7 +53,7 @@ class ReservationConcurrencyBaselineTests {
     private JdbcTemplate jdbcTemplate;
 
     @RepeatedTest(3)
-    void lockFreeReservationReproducesBrokenConsistencyInvariant(RepetitionInfo repetitionInfo)
+    void pessimisticLockPreservesCapacityAndCountInvariants(RepetitionInfo repetitionInfo)
             throws Exception {
         Facility facility = facilityRepository.findAll(
                 PageRequest.of(0, 1, Sort.by("id"))).getContent().getFirst();
@@ -63,6 +63,7 @@ class ReservationConcurrencyBaselineTests {
         CountDownLatch ready = new CountDownLatch(REQUESTS);
         CountDownLatch start = new CountDownLatch(1);
         AtomicInteger successes = new AtomicInteger();
+        AtomicInteger conflicts = new AtomicInteger();
         Map<String, AtomicInteger> exceptions = new ConcurrentHashMap<>();
 
         try {
@@ -76,6 +77,13 @@ class ReservationConcurrencyBaselineTests {
                     try {
                         reservationService.reserve(program.getId(), participantId);
                         successes.incrementAndGet();
+                    } catch (ResponseStatusException exception) {
+                        if (exception.getStatusCode().value() == 409) {
+                            conflicts.incrementAndGet();
+                        } else {
+                            exceptions.computeIfAbsent(exceptionName(exception),
+                                    key -> new AtomicInteger()).incrementAndGet();
+                        }
                     } catch (Exception exception) {
                         exceptions.computeIfAbsent(exceptionName(exception),
                                 key -> new AtomicInteger()).incrementAndGet();
@@ -92,21 +100,25 @@ class ReservationConcurrencyBaselineTests {
 
             Program result = programRepository.findById(program.getId()).orElseThrow();
             long reservationRows = reservationRepository.countByProgramId(program.getId());
-            int failures = REQUESTS - successes.get();
-            boolean overbooked = reservationRows > CAPACITY;
-            boolean countMatchesRows = result.getReservedCount() == reservationRows;
+            int unexpectedFailures = exceptions.values().stream()
+                    .mapToInt(AtomicInteger::get)
+                    .sum();
 
             System.out.printf(
-                    "CONCURRENCY_BASELINE run=%d capacity=%d requests=%d successes=%d failures=%d "
-                            + "reservedCount=%d reservationRows=%d overbooked=%s "
-                            + "countMatchesRows=%s exceptions=%s%n",
+                    "PESSIMISTIC_LOCK run=%d capacity=%d requests=%d successes=%d conflicts=%d "
+                            + "unexpectedFailures=%d reservedCount=%d reservationRows=%d "
+                            + "exceptions=%s%n",
                     repetitionInfo.getCurrentRepetition(), CAPACITY, REQUESTS, successes.get(),
-                    failures, result.getReservedCount(), reservationRows, overbooked,
-                    countMatchesRows, exceptionCounts(exceptions));
+                    conflicts.get(), unexpectedFailures, result.getReservedCount(),
+                    reservationRows, exceptionCounts(exceptions));
 
-            assertThat(successes.get() + failures).isEqualTo(REQUESTS);
-            assertThat(reservationRows).isEqualTo(successes.get());
-            assertThat(overbooked || !countMatchesRows).isTrue();
+            assertThat(successes.get()).isEqualTo(CAPACITY);
+            assertThat(conflicts.get()).isEqualTo(REQUESTS - CAPACITY);
+            assertThat(unexpectedFailures).isZero();
+            assertThat(successes.get() + conflicts.get() + unexpectedFailures)
+                    .isEqualTo(REQUESTS);
+            assertThat(reservationRows).isEqualTo(CAPACITY);
+            assertThat(result.getReservedCount()).isEqualTo(CAPACITY);
         } finally {
             executor.shutdownNow();
             executor.awaitTermination(10, TimeUnit.SECONDS);

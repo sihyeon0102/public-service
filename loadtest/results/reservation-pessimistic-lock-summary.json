@@ -1,0 +1,175 @@
+{
+  "schemaVersion": 1,
+  "title": "Reservation HTTP concurrency with Program PESSIMISTIC_WRITE",
+  "measuredAt": "2026-09-09 Asia/Seoul",
+  "sourceCommit": "87cc6cfd05d10d90c242e90b52ab4f40c93665bc",
+  "scriptSha256": "640FE0639866B2B49A86528FBEFA00AB1C28E3D1769D569C3AB01D6D4EE1201A",
+  "lock": {
+    "repository": "@Lock(LockModeType.PESSIMISTIC_WRITE)",
+    "method": "ProgramRepository.findByIdForUpdate",
+    "hibernateSql": "select ... from program where id=? for update of p1_0",
+    "transaction": "lock lookup, capacity check, reservedCount increment, Reservation insert, and commit share one @Transactional boundary"
+  },
+  "environment": {
+    "java": "21.0.12.1",
+    "springBoot": "4.1.1",
+    "mysql": "8.4.11",
+    "mysqlIsolation": "REPEATABLE-READ",
+    "facilityRows": 1000000,
+    "hikariMax": 10,
+    "prometheusScrapeIntervalSeconds": 15,
+    "k6Image": "grafana/k6:2.1.0",
+    "baseUrlFromK6": "http://host.docker.internal:8080"
+  },
+  "workload": {
+    "endpoint": "POST /api/programs/{programId}/reservations",
+    "executor": "per-vu-iterations",
+    "vus": 200,
+    "iterationsPerVu": 1,
+    "requests": 200,
+    "capacity": 100,
+    "participantsAreUnique": true,
+    "sameAsBefore": true,
+    "responseClassificationChange": "HTTP 201 and 409 are expected responses; 5xx and network failures remain failed requests"
+  },
+  "serviceIntegrationTest": {
+    "repetitions": 3,
+    "eachRun": {
+      "requests": 200,
+      "successes": 100,
+      "conflicts": 100,
+      "unexpectedFailures": 0,
+      "reservedCount": 100,
+      "reservationRows": 100
+    }
+  },
+  "httpRuns": [
+    {
+      "run": 1,
+      "requests": 200,
+      "status201": 100,
+      "status409": 100,
+      "status5xx": 0,
+      "deadlocks1213": 0,
+      "reservedCount": 100,
+      "reservationRows": 100,
+      "rps": 114.69238931451403,
+      "success201Rps": 57.346194657257016,
+      "testRunDurationMs": 1743.795,
+      "durationMs": {
+        "avg": 1127.938,
+        "p95": 1494.853,
+        "p99": 1508.224,
+        "max": 1549.707
+      },
+      "httpFailedRate": 0.0,
+      "hikari": { "activeMax": 10, "idleMin": 0, "pendingMax": 143, "max": 10 },
+      "cpu": { "processMaxPercent": 30.52, "systemMaxPercent": 89.83 },
+      "rowLock": { "waitsDelta": 199, "waitTimeMillisecondsDelta": 13441 },
+      "allInvariantsHold": true
+    },
+    {
+      "run": 2,
+      "requests": 200,
+      "status201": 100,
+      "status409": 100,
+      "status5xx": 0,
+      "deadlocks1213": 0,
+      "reservedCount": 100,
+      "reservationRows": 100,
+      "rps": 105.47842653934758,
+      "success201Rps": 52.73921326967379,
+      "testRunDurationMs": 1896.122,
+      "durationMs": {
+        "avg": 1184.486,
+        "p95": 1513.962,
+        "p99": 1521.774,
+        "max": 1524.271
+      },
+      "httpFailedRate": 0.0,
+      "hikari": { "activeMax": 10, "idleMin": 0, "pendingMax": 170, "max": 10 },
+      "cpu": { "processMaxPercent": 23.47, "systemMaxPercent": 94.07 },
+      "rowLock": { "waitsDelta": 199, "waitTimeMillisecondsDelta": 13785 },
+      "allInvariantsHold": true
+    },
+    {
+      "run": 3,
+      "requests": 200,
+      "status201": 100,
+      "status409": 100,
+      "status5xx": 0,
+      "deadlocks1213": 0,
+      "reservedCount": 100,
+      "reservationRows": 100,
+      "rps": 130.99878949586076,
+      "success201Rps": 65.49939474793038,
+      "testRunDurationMs": 1526.732,
+      "durationMs": {
+        "avg": 941.120,
+        "p95": 1352.252,
+        "p99": 1367.400,
+        "max": 1370.922
+      },
+      "httpFailedRate": 0.0,
+      "hikari": { "activeMax": 10, "idleMin": 0, "pendingMax": 135, "max": 10 },
+      "cpu": { "processMaxPercent": 24.88, "systemMaxPercent": 87.61 },
+      "rowLock": { "waitsDelta": 199, "waitTimeMillisecondsDelta": 11191 },
+      "allInvariantsHold": true
+    }
+  ],
+  "beforeAverage": {
+    "rps": 126.01811943984869,
+    "p95Ms": 1222.8809797666665,
+    "success201Rps": 24.38913090065051,
+    "status201Range": "36-41",
+    "status409": 0,
+    "status5xxRange": "159-164",
+    "deadlockRange": "159-164",
+    "reservedCountRange": "18-20",
+    "reservationRowsRange": "36-41",
+    "hikariPendingMaxRange": "73-172"
+  },
+  "afterAverage": {
+    "rps": 117.056535116574,
+    "p95Ms": 1453.689,
+    "success201Rps": 58.52826755828706,
+    "status201": 100,
+    "status409": 100,
+    "status5xx": 0,
+    "deadlocks": 0,
+    "reservedCount": 100,
+    "reservationRows": 100,
+    "hikariPendingMaxAverage": 149.33333333333334
+  },
+  "comparison": {
+    "averageRpsChangePercent": -7.11,
+    "averageP95ChangePercent": 18.87,
+    "averageSuccess201RpsChangePercent": 139.98,
+    "lostUpdateRemoved": true,
+    "unexpected5xxRemoved": true,
+    "deadlocksRemoved": true,
+    "rowLockWaitsObservedEveryRun": true,
+    "finalStrategyChosen": false
+  },
+  "verification": {
+    "buildSuccessful": true,
+    "tests": 30,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "facilityRows": 1000000,
+    "uniqueFacilityNames": 1000000,
+    "facilityChecksumSum": 2148598155341640,
+    "programRowsAfterCleanup": 0,
+    "reservationRowsAfterCleanup": 0,
+    "facilityIndexes": [
+      "PRIMARY(id)",
+      "idx_facility_region(region)",
+      "idx_facility_region_type(region,type)",
+      "idx_facility_region_district_type(region,district,type)"
+    ],
+    "redis": "PONG",
+    "springBootHealth": "UP",
+    "prometheusTarget": "UP"
+  }
+}

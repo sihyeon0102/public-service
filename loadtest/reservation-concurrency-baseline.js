@@ -6,6 +6,7 @@ import { Counter, Rate, Trend } from 'k6/metrics';
 const baseUrl = __ENV.BASE_URL || 'http://host.docker.internal:8080';
 const programId = __ENV.PROGRAM_ID;
 const runId = __ENV.RUN_ID || 'manual';
+const workload = __ENV.WORKLOAD || 'reservation_concurrency';
 const vus = Number(__ENV.VUS || '200');
 const summaryPath = __ENV.SUMMARY_PATH || '';
 
@@ -32,7 +33,7 @@ export const options = {
       maxDuration: '60s',
       gracefulStop: '0s',
       tags: {
-        workload: 'reservation_concurrency_before',
+        workload,
         endpoint: 'create_reservation',
       },
     },
@@ -56,10 +57,11 @@ export default function () {
     {
       headers: { 'Content-Type': 'application/json' },
       tags: {
-        workload: 'reservation_concurrency_before',
+        workload,
         endpoint: 'create_reservation',
         request_kind: 'reservation',
       },
+      responseCallback: http.expectedStatuses(201, 409),
       timeout: '60s',
     },
   );
@@ -85,7 +87,7 @@ export default function () {
 
 export function handleSummary(data) {
   data.testMetadata = {
-    workload: 'reservation_concurrency_before',
+    workload,
     baseUrl,
     programId: Number(programId),
     runId,

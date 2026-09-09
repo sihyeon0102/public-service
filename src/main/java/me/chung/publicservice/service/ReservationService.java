@@ -25,7 +25,7 @@ public class ReservationService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "participantId is required");
         }
 
-        Program program = programRepository.findById(programId)
+        Program program = programRepository.findByIdForUpdate(programId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Program not found: " + programId));
 
