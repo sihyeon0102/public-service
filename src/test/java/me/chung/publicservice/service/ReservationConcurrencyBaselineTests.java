@@ -53,7 +53,7 @@ class ReservationConcurrencyBaselineTests {
     private JdbcTemplate jdbcTemplate;
 
     @RepeatedTest(3)
-    void pessimisticLockPreservesCapacityAndCountInvariants(RepetitionInfo repetitionInfo)
+    void optimisticLockWithoutRetryPreservesCommittedCountInvariants(RepetitionInfo repetitionInfo)
             throws Exception {
         Facility facility = facilityRepository.findAll(
                 PageRequest.of(0, 1, Sort.by("id"))).getContent().getFirst();
@@ -105,20 +105,21 @@ class ReservationConcurrencyBaselineTests {
                     .sum();
 
             System.out.printf(
-                    "PESSIMISTIC_LOCK run=%d capacity=%d requests=%d successes=%d conflicts=%d "
+                    "OPTIMISTIC_NO_RETRY run=%d capacity=%d requests=%d successes=%d conflicts=%d "
                             + "unexpectedFailures=%d reservedCount=%d reservationRows=%d "
                             + "exceptions=%s%n",
                     repetitionInfo.getCurrentRepetition(), CAPACITY, REQUESTS, successes.get(),
                     conflicts.get(), unexpectedFailures, result.getReservedCount(),
                     reservationRows, exceptionCounts(exceptions));
 
-            assertThat(successes.get()).isEqualTo(CAPACITY);
-            assertThat(conflicts.get()).isEqualTo(REQUESTS - CAPACITY);
-            assertThat(unexpectedFailures).isZero();
+            assertThat(successes.get()).isBetween(1, CAPACITY);
             assertThat(successes.get() + conflicts.get() + unexpectedFailures)
                     .isEqualTo(REQUESTS);
-            assertThat(reservationRows).isEqualTo(CAPACITY);
-            assertThat(result.getReservedCount()).isEqualTo(CAPACITY);
+            assertThat(reservationRows).isEqualTo(successes.get());
+            assertThat(result.getReservedCount()).isEqualTo(reservationRows);
+            assertThat(result.getVersion()).isEqualTo(reservationRows);
+            assertThat(exceptions.keySet()).allMatch(name ->
+                    name.contains("OptimisticLock") || name.contains("errorCode=1213"));
         } finally {
             executor.shutdownNow();
             executor.awaitTermination(10, TimeUnit.SECONDS);
@@ -140,7 +141,11 @@ class ReservationConcurrencyBaselineTests {
         if (exception instanceof ResponseStatusException statusException) {
             return exception.getClass().getSimpleName() + "(" + statusException.getStatusCode() + ")";
         }
-        return exception.getClass().getSimpleName();
+        List<String> chain = new ArrayList<>();
+        for (Throwable current = exception; current != null; current = current.getCause()) {
+            chain.add(current.getClass().getSimpleName());
+        }
+        return String.join(" -> ", chain);
     }
 
     private String exceptionCounts(Map<String, AtomicInteger> exceptions) {

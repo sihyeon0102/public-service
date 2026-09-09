@@ -1,0 +1,191 @@
+﻿{
+    "schemaVersion":  1,
+    "strategy":  "JPA @Version without retry",
+    "measuredAt":  "2026-09-09 Asia/Seoul",
+    "sourceCommit":  "85621cee915ba1ff03d0c5ba0f566c0855c86b2d",
+    "scriptSha256":  "640FE0639866B2B49A86528FBEFA00AB1C28E3D1769D569C3AB01D6D4EE1201A",
+    "environment":  {
+                        "prometheusScrapeSeconds":  15,
+                        "java":  "21.0.12.1",
+                        "springBoot":  "4.1.1",
+                        "isolation":  "REPEATABLE-READ",
+                        "k6":  "grafana/k6:2.1.0",
+                        "mysql":  "8.4.11",
+                        "hikariMax":  10
+                    },
+    "workload":  {
+                     "repetitions":  3,
+                     "capacity":  100,
+                     "iterationsPerVu":  1,
+                     "scriptUnchanged":  true,
+                     "vus":  200,
+                     "retry":  false,
+                     "distinctParticipants":  200,
+                     "warmup":  "Two sequential smoke requests on separate capacity=1 fixture: 201 then 409"
+                 },
+    "exceptionClassification":  {
+                                    "deadlock":  "CannotAcquireLockException; MySQL 1213, SQLState 40001; HTTP root MySQLTransactionRollbackException",
+                                    "optimistic":  "ObjectOptimisticLockingFailureException -\u003e StaleObjectStateException -\u003e StaleStateException (Service); HTTP root log StaleStateException",
+                                    "method":  "One dispatcherServlet ERROR header per failed request; corroborate 1213 with Performance Schema global error counter delta; no other load during measurement"
+                                },
+    "metricSampling":  "Same observer as Before: sequential Actuator requests, then 200ms sleep. Actual interval exceeds 200ms; gauges may miss peaks. CPU is sampled process/system usage, not CPU time per request.",
+    "serviceRuns":  [
+                        "OPTIMISTIC_NO_RETRY run=1 capacity=100 requests=200 successes=20 conflicts=0 unexpectedFailures=180 reservedCount=20 reservationRows=20 exceptions={CannotAcquireLockException(errorCode=1213,sqlState=40001)=156, ObjectOptimisticLockingFailureException -\u003e StaleObjectStateException -\u003e StaleStateException=24}",
+                        "OPTIMISTIC_NO_RETRY run=2 capacity=100 requests=200 successes=20 conflicts=0 unexpectedFailures=180 reservedCount=20 reservationRows=20 exceptions={CannotAcquireLockException(errorCode=1213,sqlState=40001)=158, ObjectOptimisticLockingFailureException -\u003e StaleObjectStateException -\u003e StaleStateException=22}",
+                        "OPTIMISTIC_NO_RETRY run=3 capacity=100 requests=200 successes=21 conflicts=0 unexpectedFailures=179 reservedCount=21 reservationRows=21 exceptions={CannotAcquireLockException(errorCode=1213,sqlState=40001)=158, ObjectOptimisticLockingFailureException -\u003e StaleObjectStateException -\u003e StaleStateException=21}"
+                    ],
+    "httpRuns":  [
+                     {
+                         "run":  1,
+                         "programId":  51,
+                         "startUtc":  "2026-09-09T10:51:09.6509928+00:00",
+                         "endUtc":  "2026-09-09T10:51:12.6731240+00:00",
+                         "requests":  200,
+                         "status201":  25,
+                         "status409":  0,
+                         "status5xx":  175,
+                         "optimisticConflicts":  28,
+                         "mysql1213":  147,
+                         "unclassifiedFailures":  0,
+                         "errorRate":  0.875,
+                         "reservedCount":  25,
+                         "reservationRows":  25,
+                         "capacity":  100,
+                         "allInvariantsHold":  true,
+                         "rps":  116.51695057049935,
+                         "success201Rps":  14.564618821312418,
+                         "durationMs":  {
+                                            "avg":  846.0364805349997,
+                                            "med":  831.2157520000001,
+                                            "p(90)":  1263.0288289,
+                                            "p(95)":  1347.86889825,
+                                            "p(99)":  1387.06530054,
+                                            "max":  1395.761192
+                                        },
+                         "testRunDurationMs":  1716.488451,
+                         "hikari":  {
+                                        "activeMax":  10,
+                                        "idleMin":  0,
+                                        "pendingMax":  61,
+                                        "max":  10
+                                    },
+                         "cpu":  {
+                                     "processMaxPercent":  37.203200105410794,
+                                     "systemMaxPercent":  100
+                                 },
+                         "rowLockWaits":  325,
+                         "rowLockTimeMs":  1819
+                     },
+                     {
+                         "run":  2,
+                         "programId":  52,
+                         "startUtc":  "2026-09-09T10:51:51.1606519+00:00",
+                         "endUtc":  "2026-09-09T10:51:53.8304141+00:00",
+                         "requests":  200,
+                         "status201":  23,
+                         "status409":  0,
+                         "status5xx":  177,
+                         "optimisticConflicts":  24,
+                         "mysql1213":  153,
+                         "unclassifiedFailures":  0,
+                         "errorRate":  0.885,
+                         "reservedCount":  23,
+                         "reservationRows":  23,
+                         "capacity":  100,
+                         "allInvariantsHold":  true,
+                         "rps":  116.81565364336255,
+                         "success201Rps":  13.433800168986693,
+                         "durationMs":  {
+                                            "avg":  867.4087537149998,
+                                            "med":  859.2337319999999,
+                                            "p(90)":  1307.6102303999999,
+                                            "p(95)":  1393.95985775,
+                                            "p(99)":  1415.7813757899999,
+                                            "max":  1434.145578
+                                        },
+                         "testRunDurationMs":  1712.09931,
+                         "hikari":  {
+                                        "activeMax":  10,
+                                        "idleMin":  0,
+                                        "pendingMax":  141,
+                                        "max":  10
+                                    },
+                         "cpu":  {
+                                     "processMaxPercent":  33.6900212264285,
+                                     "systemMaxPercent":  100
+                                 },
+                         "rowLockWaits":  319,
+                         "rowLockTimeMs":  2335
+                     },
+                     {
+                         "run":  3,
+                         "programId":  53,
+                         "startUtc":  "2026-09-09T10:52:04.7358023+00:00",
+                         "endUtc":  "2026-09-09T10:52:07.8405425+00:00",
+                         "requests":  200,
+                         "status201":  21,
+                         "status409":  0,
+                         "status5xx":  179,
+                         "optimisticConflicts":  20,
+                         "mysql1213":  159,
+                         "unclassifiedFailures":  0,
+                         "errorRate":  0.895,
+                         "reservedCount":  21,
+                         "reservationRows":  21,
+                         "capacity":  100,
+                         "allInvariantsHold":  true,
+                         "rps":  112.29564140891108,
+                         "success201Rps":  11.791042347935663,
+                         "durationMs":  {
+                                            "avg":  893.87770152,
+                                            "med":  953.9900815,
+                                            "p(90)":  1359.0464430999998,
+                                            "p(95)":  1375.0880866499997,
+                                            "p(99)":  1408.49818414,
+                                            "max":  1420.991655
+                                        },
+                         "testRunDurationMs":  1781.013025,
+                         "hikari":  {
+                                        "activeMax":  10,
+                                        "idleMin":  0,
+                                        "pendingMax":  98,
+                                        "max":  10
+                                    },
+                         "cpu":  {
+                                     "processMaxPercent":  26.366919520827565,
+                                     "systemMaxPercent":  100
+                                 },
+                         "rowLockWaits":  323,
+                         "rowLockTimeMs":  2422
+                     }
+                 ],
+    "average":  {
+                    "p95Ms":  1372.3056142166668,
+                    "p99Ms":  1403.7816201566668,
+                    "avgMs":  869.10764525666639,
+                    "rps":  115.20941520759101,
+                    "success201Rps":  13.26315377941159
+                },
+    "verification":  {
+                         "failures":  0,
+                         "errors":  0,
+                         "facilityIndexes":  [
+                                                 "PRIMARY(id)",
+                                                 "idx_facility_region(region)",
+                                                 "idx_facility_region_type(region,type)",
+                                                 "idx_facility_region_district_type(region,district,type)"
+                                             ],
+                         "reservationRowsAfterCleanup":  0,
+                         "redis":  "PONG; repeated Facility A response has 20 content / 50000 total and cache hit delta=1",
+                         "distinctNames":  1000000,
+                         "schemaChange":  "program.version BIGINT NOT NULL DEFAULT 0 only",
+                         "skipped":  0,
+                         "build":  "BUILD SUCCESSFUL in 50s; gradlew.bat build --rerun-tasks --console=plain with ddl-auto=validate",
+                         "tests":  30,
+                         "facilityRows":  1000000,
+                         "programRowsAfterCleanup":  0,
+                         "facilityChecksumSum":  2148598155341640,
+                         "prometheus":  "UP",
+                         "application":  "UP"
+                     }
+}
